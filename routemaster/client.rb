@@ -6,6 +6,7 @@ require 'json'
 require 'faraday'
 require 'typhoeus'
 require 'typhoeus/adapters/faraday'
+require 'oj'
 
 module Routemaster
   class Client
@@ -54,7 +55,7 @@ module Routemaster
 
       response = _post('/subscription') do |r|
         r.headers['Content-Type'] = 'application/json'
-        r.body = options.to_json
+        r.body = Oj.dump(_stringify_keys options)
       end
 
       unless response.success?
@@ -101,13 +102,21 @@ module Routemaster
         raise 'failed to connect to /topics'
       end
 
-      JSON(response.body).map do |raw_topic|
+      Oj.load(response.body).map do |raw_topic|
         Topic.new raw_topic
       end
     end
 
 
     private
+
+    def _stringify_keys(hash)
+      hash.dup.tap do |h|
+        h.keys.each do |k|
+          h[k.to_s] = h.delete(k)
+        end
+      end
+    end
 
     def _assert_valid_timeout(timeout)
       _assert (0..3_600_000).include?(timeout), 'bad timeout'
@@ -140,7 +149,7 @@ module Routemaster
 
       response = _post("/topics/#{topic}") do |r|
         r.headers['Content-Type'] = 'application/json'
-        r.body = data.to_json
+        r.body = Oj.dump(_stringify_keys data)
       end
       fail "event rejected (#{response.status})" unless response.success?
     end
