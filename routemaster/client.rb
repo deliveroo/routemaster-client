@@ -2,8 +2,10 @@ require 'routemaster/client/version'
 require 'routemaster/client/openssl'
 require 'routemaster/topic'
 require 'uri'
-require 'faraday'
 require 'json'
+require 'faraday'
+require 'typhoeus'
+require 'typhoeus/adapters/faraday'
 
 module Routemaster
   class Client
@@ -148,13 +150,7 @@ module Routemaster
     end
 
     def _http(method, path, &block)
-      retries ||= 5
       _conn.send(method, path, &block)
-    rescue Net::HTTP::Persistent::Error => e
-      raise if (retries -= 1).zero?
-      puts "warning: retrying post to #{path} on #{e.class.name}: #{e.message} (#{retries})"
-      @_conn = nil
-      retry
     end
 
     def _post(path, &block)
@@ -173,7 +169,7 @@ module Routemaster
       @_conn ||= Faraday.new(@_url) do |f|
         f.request :retry, max: 2, interval: 100e-3, backoff_factor: 2
         f.request :basic_auth, @_uuid, 'x'
-        f.adapter :net_http_persistent
+        f.adapter :typhoeus
 
         f.options.timeout      = @_timeout
         f.options.open_timeout = @_timeout
