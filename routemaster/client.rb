@@ -128,7 +128,7 @@ module Routemaster
     end
 
     def _assert_valid_timestamp(timestamp)
-      _assert timestamp.is_a?(Numeric), 'not a numeric number'
+      _assert timestamp.kind_of?(Integer), 'not an integer'
     end
 
     def _send_event(event, topic, callback, timestamp = nil)

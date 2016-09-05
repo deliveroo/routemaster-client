@@ -130,7 +130,7 @@ describe Routemaster::Client do
     end
 
     context 'with explicit timestamp' do
-      let(:timestamp) { Time.now.to_f }
+      let(:timestamp) { (Time.now.to_f * 1e3).to_i }
       let(:perform)   { subject.send(event, topic, callback, timestamp) }
 
       before do
@@ -147,10 +147,18 @@ describe Routemaster::Client do
         expect(@stub).to have_been_requested
       end
 
-      context 'with bad timestamp' do
+      context 'with non-numeric timestamp' do
         let(:timestamp) { 'foo' }
 
-        it 'fails with non-numeric timestamp' do
+        it 'fails' do
+          expect { perform }.to raise_error(ArgumentError)
+        end
+      end
+
+      context 'with non-integer timestamp' do
+        let(:timestamp) { 123.45 }
+
+        it 'fails' do
           expect { perform }.to raise_error(ArgumentError)
         end
       end
