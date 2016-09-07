@@ -1,5 +1,4 @@
 require 'routemaster/client/version'
-require 'routemaster/client/openssl'
 require 'routemaster/topic'
 require 'uri'
 require 'json'
@@ -10,10 +9,12 @@ require 'oj'
 
 module Routemaster
   class Client
+    
     def initialize(options = {})
       @_url = _assert_valid_url(options[:url])
       @_uuid = options[:uuid]
       @_timeout = options.fetch(:timeout, 1)
+      @_verify_ssl = options.fetch(:verify_ssl, true)
 
       _assert (options[:uuid] =~ /^[a-z0-9_-]{1,64}$/), 'uuid should be alpha'
       _assert_valid_timeout(@_timeout)
@@ -175,7 +176,7 @@ module Routemaster
     end
 
     def _conn
-      @_conn ||= Faraday.new(@_url) do |f|
+      @_conn ||= Faraday.new(@_url, ssl: { verify: @_verify_ssl }) do |f|
         f.request :retry, max: 2, interval: 100e-3, backoff_factor: 2
         f.request :basic_auth, @_uuid, 'x'
         f.adapter :typhoeus

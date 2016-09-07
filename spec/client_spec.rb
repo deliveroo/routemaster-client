@@ -4,9 +4,11 @@ require 'routemaster/topic'
 require 'webmock/rspec'
 
 describe Routemaster::Client do
-  let(:options) do
-    { url:  'https://bus.example.com', uuid: 'john_doe' }
-  end
+  let(:options) {{
+    url:        'https://bus.example.com',
+    uuid:       'john_doe',
+    verify_ssl: false,
+  }}
   let(:pulse_response) { 204 }
 
   subject { described_class.new(options) }
