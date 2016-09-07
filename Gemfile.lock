@@ -3,9 +3,9 @@ PATH
   specs:
     routemaster-client (1.2.2)
       faraday (>= 0.9.0)
-      oj
-      typhoeus (~> 1)
-      wisper (>= 1.6.1)
+      oj (~> 2.17)
+      typhoeus (~> 1.1)
+      wisper (~> 1.6.1)
 
 GEM
   remote: https://rubygems.org/
