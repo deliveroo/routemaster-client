@@ -56,7 +56,7 @@ module Routemaster
       end
 
       unless response.success?
-        raise 'subscription rejected'
+        raise 'subscribe rejected'
       end
     end
 
@@ -67,7 +67,7 @@ module Routemaster
         response = _delete("/subscriber/topics/#{t}")
 
         unless response.success?
-          raise 'unsubscription rejected'
+          raise 'unsubscribe rejected'
         end
       end
     end
@@ -76,7 +76,7 @@ module Routemaster
       response = _delete('/subscriber')
 
       unless response.success?
-        raise 'unsubscription rejected'
+        raise 'unsubscribe all rejected'
       end
     end
 
