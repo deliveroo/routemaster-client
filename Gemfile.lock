@@ -3,7 +3,7 @@ PATH
   specs:
     routemaster-client (1.2.2)
       faraday (>= 0.9.0)
-      net-http-persistent (>= 2.9.4)
+      net-http-persistent (~> 2.9.4)
       wisper (>= 1.6.1)
 
 GEM
@@ -97,4 +97,4 @@ DEPENDENCIES
   webmock
 
 BUNDLED WITH
-   1.12.5
+   1.13.2
