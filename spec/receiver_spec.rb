@@ -15,7 +15,7 @@ describe Routemaster::Receiver do
   let(:options) do
     {
       path:     '/events',
-      uuid:     'demo'
+      delivery_token:     'demo'
     }
   end
 
@@ -62,7 +62,7 @@ describe Routemaster::Receiver do
   context 'with the deprecated :handler option' do
     let(:options) {{
       path:     '/events',
-      uuid:     'demo',
+      delivery_token:     'demo',
       handler:  handler
     }}
 

@@ -6,7 +6,7 @@ require 'webmock/rspec'
 describe Routemaster::Client do
   let(:options) {{
     url:        'https://bus.example.com',
-    uuid:       'john_doe',
+    delivery_token:       'john_doe',
     verify_ssl: false,
   }}
   let(:pulse_response) { 204 }
@@ -15,7 +15,7 @@ describe Routemaster::Client do
 
   before do
     @stub_pulse = stub_request(:get, %r{^https://bus.example.com/pulse$}).
-      with(basic_auth: [options[:uuid], 'x']).
+      with(basic_auth: [options[:delivery_token], 'x']).
       to_return(status: pulse_response)
   end
 
@@ -35,14 +35,14 @@ describe Routemaster::Client do
     end
 
     it 'fails with a bad client id' do
-      options[:uuid].replace('123 $%')
+      options[:delivery_token].replace('123 $%')
       expect { subject }.to raise_error(ArgumentError)
     end
 
     context 'when connection fails' do
       before do
         stub_request(:any, %r{^https://bus.example.com}).
-          with(basic_auth: [options[:uuid], 'x']).
+          with(basic_auth: [options[:delivery_token], 'x']).
           to_raise(Faraday::ConnectionFailed)
       end
 
@@ -78,7 +78,7 @@ describe Routemaster::Client do
 
     before do
       @stub = stub_request(:post, 'https://bus.example.com/topics/widgets').
-        with(basic_auth: [options[:uuid], 'x'])
+        with(basic_auth: [options[:delivery_token], 'x'])
 
       @stub.to_return(status: http_status) if http_status
     end
@@ -139,7 +139,7 @@ describe Routemaster::Client do
         @stub = stub_request(:post, 'https://@bus.example.com/topics/widgets').
           with(
             body: { type: anything, url: callback, timestamp: timestamp },
-            basic_auth: [options[:uuid], 'x'],
+            basic_auth: [options[:delivery_token], 'x'],
           ).
           to_return(status: 200)
       end
@@ -198,7 +198,7 @@ describe Routemaster::Client do
 
     before do
       @stub = stub_request(:post, 'https://bus.example.com/subscription').
-      with(basic_auth: [options[:uuid], 'x']).
+      with(basic_auth: [options[:delivery_token], 'x']).
       with { |r|
         r.headers['Content-Type'] == 'application/json' &&
         JSON.parse(r.body).all? { |k,v| subscribe_options[k.to_sym] == v }
@@ -235,8 +235,8 @@ describe Routemaster::Client do
       expect { perform }.to raise_error(RuntimeError)
     end
 
-    it 'accepts a uuid' do
-      subscribe_options[:uuid] = 'hello'
+    it 'accepts a delivery_token' do
+      subscribe_options[:delivery_token] = 'hello'
       expect { perform }.not_to raise_error
     end
   end
@@ -249,7 +249,7 @@ describe Routemaster::Client do
 
     before do
       @stub = stub_request(:delete, %r{https://bus.example.com/subscriber/topics/widgets}).
-      with(basic_auth: [options[:uuid], 'x'])
+      with(basic_auth: [options[:delivery_token], 'x'])
     end
 
     it 'passes with correct arguments' do
@@ -274,7 +274,7 @@ describe Routemaster::Client do
 
     before do
       @stub = stub_request(:delete, %r{https://bus.example.com/subscriber}).
-      with(basic_auth: [options[:uuid], 'x'])
+      with(basic_auth: [options[:delivery_token], 'x'])
     end
 
     it 'passes with correct arguments' do
@@ -296,7 +296,7 @@ describe Routemaster::Client do
 
     before do
       @stub = stub_request(:delete, %r{https://bus.example.com/topics/widgets}).
-      with(basic_auth: [options[:uuid], 'x'])
+      with(basic_auth: [options[:delivery_token], 'x'])
     end
 
     it 'passes with correct arguments' do
@@ -331,7 +331,7 @@ describe Routemaster::Client do
 
     before do
       @stub = stub_request(:get, 'https://bus.example.com/topics').
-        with(basic_auth: [options[:uuid], 'x']).
+        with(basic_auth: [options[:delivery_token], 'x']).
         with { |r|
           r.headers['Content-Type'] == 'application/json'
         }.to_return {

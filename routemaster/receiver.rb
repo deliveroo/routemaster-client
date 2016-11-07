@@ -10,7 +10,7 @@ module Routemaster
     def initialize(app, options = {})
       @app     = app
       @path    = options[:path]
-      @uuid    = options[:uuid]
+      @delivery_token    = options[:delivery_token]
 
       if options[:handler]
         warn 'the :handler option is deprecated, listen to the :events_received event instead'
@@ -46,7 +46,7 @@ module Routemaster
     def _valid_auth?(env)
       Base64.
         decode64(env['HTTP_AUTHORIZATION'].gsub(/^Basic /, '')).
-        split(':').first == @uuid
+        split(':').first == @delivery_token
     end
 
     def _extract_payload(env)

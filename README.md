@@ -25,13 +25,13 @@ Or install it yourself as:
 
 ```ruby
 require 'routemaster/client'
-client = Routemaster::Client.new(url: 'https://bus.example.com', uuid: 'demo')
+client = Routemaster::Client.new(url: 'https://bus.example.com', delivery_token: 'demo')
 ```
 
 You can also specify a timeout value in seconds if you like with the ```timeout``` option.
 
 ```ruby
-Routemaster::Client.new(url: 'https://bus.example.com', uuid: 'demo', timeout: 2)
+Routemaster::Client.new(url: 'https://bus.example.com', delivery_token: 'demo', timeout: 2)
 ```
 
 
@@ -64,7 +64,7 @@ events, in batches of at most 500 events, to a given callback URL:
 client.subscribe(
   topics:   ['widgets', 'kitten'],
   callback: 'https://app.example.com/events',
-  uuid:     'demo',
+  delivery_token:     'demo',
   timeout:  60_000,
   max:      500)
 ```
@@ -87,7 +87,7 @@ Wisper.subscribe(Listener.new, :prefix => true)
 
 use Routemaster::Receiver, {
   path:    '/events',
-  uuid:    'demo'
+  delivery_token:    'demo'
 }
 ```
 

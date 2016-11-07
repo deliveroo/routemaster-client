@@ -12,11 +12,11 @@ module Routemaster
     
     def initialize(options = {})
       @_url = _assert_valid_url(options[:url])
-      @_uuid = options[:uuid]
+      @_delivery_token = options[:delivery_token]
       @_timeout = options.fetch(:timeout, 1)
       @_verify_ssl = options.fetch(:verify_ssl, true)
 
-      _assert (options[:uuid] =~ /^[a-z0-9_-]{1,64}$/), 'uuid should be alpha'
+      _assert (options[:delivery_token] =~ /^[a-z0-9_-]{1,64}$/), 'delivery_token should be alpha'
       _assert_valid_timeout(@_timeout)
 
       unless options[:lazy]
@@ -43,7 +43,7 @@ module Routemaster
     end
 
     def subscribe(options = {})
-      if (options.keys - [:topics, :callback, :timeout, :max, :uuid]).any?
+      if (options.keys - [:topics, :callback, :timeout, :max, :delivery_token]).any?
         raise ArgumentError.new('bad options')
       end
       _assert options[:topics].kind_of?(Enumerable), 'topics required'
@@ -178,7 +178,7 @@ module Routemaster
     def _conn
       @_conn ||= Faraday.new(@_url, ssl: { verify: @_verify_ssl }) do |f|
         f.request :retry, max: 2, interval: 100e-3, backoff_factor: 2
-        f.request :basic_auth, @_uuid, 'x'
+        f.request :basic_auth, @_delivery_token, 'x'
         f.adapter :typhoeus
 
         f.options.timeout      = @_timeout
