@@ -8,9 +8,14 @@ module Routemaster
     include Wisper::Publisher
 
     def initialize(app, options = {})
-      @app     = app
-      @path    = options[:path]
-      @delivery_token    = options[:delivery_token]
+      @app = app
+      @path = options[:path]
+      @delivery_token = options[:delivery_token]
+
+      if options.has_key?(:uuid)
+        warn "Routemaster::Receiver :uuid is deprecated - please use :delivery_token"
+        @delivery_token = options[:uuid]
+      end
 
       if options[:handler]
         warn 'the :handler option is deprecated, listen to the :events_received event instead'

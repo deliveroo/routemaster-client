@@ -11,6 +11,11 @@ module Routemaster
   class Client
     
     def initialize(options = {})
+      if options.has_key?(:uuid)
+        warn "Routemaster::Client :uuid is deprecated - please use :delivery_token"
+        options[:delivery_token] = options.delete(:uuid)
+      end
+
       @_url = _assert_valid_url(options[:url])
       @_delivery_token = options[:delivery_token]
       @_timeout = options.fetch(:timeout, 1)
