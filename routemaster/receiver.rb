@@ -10,11 +10,11 @@ module Routemaster
     def initialize(app, options = {})
       @app = app
       @path = options[:path]
-      @delivery_token = options[:delivery_token]
+      @callback_token = options[:callback_token]
 
       if options.has_key?(:uuid)
-        warn "Routemaster::Receiver :uuid is deprecated - please use :delivery_token"
-        @delivery_token = options[:uuid]
+        warn "Routemaster::Receiver :uuid is deprecated - please use :callback_token"
+        @callback_token = options[:uuid]
       end
 
       if options[:handler]
@@ -51,7 +51,7 @@ module Routemaster
     def _valid_auth?(env)
       Base64.
         decode64(env['HTTP_AUTHORIZATION'].gsub(/^Basic /, '')).
-        split(':').first == @delivery_token
+        split(':').first == @callback_token
     end
 
     def _extract_payload(env)
