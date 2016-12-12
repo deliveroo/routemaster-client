@@ -34,6 +34,11 @@ You can also specify a timeout value in seconds if you like with the ```timeout`
 Routemaster::Client.new(url: 'https://bus.example.com', uuid: 'demo', timeout: 2)
 ```
 
+If you are using Sidekiq in your project, you can specify the usage of a Sidekiq backend, where event sending will be processed asynchronously.
+
+```ruby
+Routemaster::Client.new(url, 'https://bus.example.com', uuid: 'demo', backend_type: Routemaster::Client::Backends::Sidekiq)
+```
 
 **Push** an event about an entity in the topic `widgets` with a callback URL:
 

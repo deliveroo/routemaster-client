@@ -2,6 +2,7 @@ require 'spec_helper'
 require 'routemaster/client'
 require 'routemaster/topic'
 require 'webmock/rspec'
+require 'sidekiq/testing'
 
 describe Routemaster::Client do
   let(:options) {{
@@ -36,6 +37,12 @@ describe Routemaster::Client do
 
     it 'fails with a bad client id' do
       options[:uuid].replace('123 $%')
+      expect { subject }.to raise_error(ArgumentError)
+    end
+
+    it 'fails with an invalid worker_type' do
+      Jeff = double
+      options[:backend_type] = Jeff
       expect { subject }.to raise_error(ArgumentError)
     end
 
@@ -167,24 +174,58 @@ describe Routemaster::Client do
     end
   end
 
-  describe '#created' do
-    let(:event) { 'created' }
-    it_behaves_like 'an event sender'
+  context "With no background worker specified" do
+    describe '#created' do
+      let(:event) { 'created' }
+      it_behaves_like 'an event sender'
+    end
+
+    describe '#updated' do
+      let(:event) { 'updated' }
+      it_behaves_like 'an event sender'
+    end
+
+    describe '#deleted' do
+      let(:event) { 'deleted' }
+      it_behaves_like 'an event sender'
+    end
+
+    describe '#noop' do
+      let(:event) { 'noop' }
+      it_behaves_like 'an event sender'
+    end
   end
 
-  describe '#updated' do
-    let(:event) { 'updated' }
-    it_behaves_like 'an event sender'
-  end
+  context "With the sidekiq back end" do
+    before do
+      options[:backend_type] = Routemaster::Client::Backends::Sidekiq
+    end
 
-  describe '#deleted' do
-    let(:event) { 'deleted' }
-    it_behaves_like 'an event sender'
-  end
+    around do |example|
+      Sidekiq::Testing.inline! do
+        example.run
+      end
+    end
 
-  describe '#noop' do
-    let(:event) { 'noop' }
-    it_behaves_like 'an event sender'
+    describe '#created' do
+      let(:event) { 'created' }
+      it_behaves_like 'an event sender'
+    end
+
+    describe '#updated' do
+      let(:event) { 'updated' }
+      it_behaves_like 'an event sender'
+    end
+
+    describe '#deleted' do
+      let(:event) { 'deleted' }
+      it_behaves_like 'an event sender'
+    end
+
+    describe '#noop' do
+      let(:event) { 'noop' }
+      it_behaves_like 'an event sender'
+    end
   end
 
   describe '#subscribe' do
