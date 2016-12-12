@@ -8,9 +8,14 @@ module Routemaster
     include Wisper::Publisher
 
     def initialize(app, options = {})
-      @app     = app
-      @path    = options[:path]
-      @uuid    = options[:uuid]
+      @app = app
+      @path = options[:path]
+      @callback_token = options[:callback_token]
+
+      if options.has_key?(:uuid)
+        warn "Routemaster::Receiver :uuid is deprecated - please use :callback_token"
+        @callback_token = options[:uuid]
+      end
 
       if options[:handler]
         warn 'the :handler option is deprecated, listen to the :events_received event instead'
@@ -46,7 +51,7 @@ module Routemaster
     def _valid_auth?(env)
       Base64.
         decode64(env['HTTP_AUTHORIZATION'].gsub(/^Basic /, '')).
-        split(':').first == @uuid
+        split(':').first == @callback_token
     end
 
     def _extract_payload(env)

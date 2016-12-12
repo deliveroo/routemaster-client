@@ -14,8 +14,8 @@ describe Routemaster::Receiver do
   
   let(:options) do
     {
-      path:     '/events',
-      uuid:     'demo'
+      path:           '/events',
+      callback_token: 'demo'
     }
   end
 
@@ -61,9 +61,9 @@ describe Routemaster::Receiver do
 
   context 'with the deprecated :handler option' do
     let(:options) {{
-      path:     '/events',
-      uuid:     'demo',
-      handler:  handler
+      path:           '/events',
+      callback_token: 'demo',
+      handler:        handler
     }}
 
     it 'calls the handler when receiving an avent' do

@@ -11,12 +11,17 @@ module Routemaster
   class Client
     
     def initialize(options = {})
+      if options.has_key?(:uuid)
+        warn "Routemaster::Client :uuid is deprecated - please use :client_token"
+        options[:client_token] = options.delete(:uuid)
+      end
+
       @_url = _assert_valid_url(options[:url])
-      @_uuid = options[:uuid]
+      @_client_token = options[:client_token]
       @_timeout = options.fetch(:timeout, 1)
       @_verify_ssl = options.fetch(:verify_ssl, true)
 
-      _assert (options[:uuid] =~ /^[a-z0-9_-]{1,64}$/), 'uuid should be alpha'
+      _assert (options[:client_token] =~ /^[a-z0-9_-]{1,64}$/), 'client_token should be alpha'
       _assert_valid_timeout(@_timeout)
 
       unless options[:lazy]
@@ -43,9 +48,15 @@ module Routemaster
     end
 
     def subscribe(options = {})
-      if (options.keys - [:topics, :callback, :timeout, :max, :uuid]).any?
+      if (options.keys - [:topics, :callback, :timeout, :max, :uuid, :callback_token]).any?
         raise ArgumentError.new('bad options')
       end
+
+      if options.has_key?(:uuid)
+        warn ":uuid is deprecated - please use :callback_token"
+        options[:callback_token] = options.delete(:uuid)
+      end
+
       _assert options[:topics].kind_of?(Enumerable), 'topics required'
       _assert options[:callback], 'callback required'
       _assert_valid_timeout options[:timeout] if options[:timeout]
@@ -178,7 +189,7 @@ module Routemaster
     def _conn
       @_conn ||= Faraday.new(@_url, ssl: { verify: @_verify_ssl }) do |f|
         f.request :retry, max: 2, interval: 100e-3, backoff_factor: 2
-        f.request :basic_auth, @_uuid, 'x'
+        f.request :basic_auth, @_client_token, 'x'
         f.adapter :typhoeus
 
         f.options.timeout      = @_timeout
