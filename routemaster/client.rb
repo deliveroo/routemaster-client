@@ -1,7 +1,7 @@
-require 'routemaster/client/version'
+require 'routemaster/client/backends'
 require 'routemaster/client/connection'
+require 'routemaster/client/version'
 require 'routemaster/topic'
-require 'routemaster/workers'
 require 'uri'
 require 'json'
 require 'faraday'
@@ -15,15 +15,16 @@ module Routemaster
     def initialize(options = {})
       @_options = options.tap do |o|
         o[:timeout] ||= 1
-        o[:worker_type] ||= :null
+        o[:backend_type] ||= Backends::Synchronous
       end
 
+      @_backend_type = @_options.fetch(:backend_type)
+
       _assert_valid_url(@_options[:url])
-      _assert_valid_worker_type(@_options.fetch(:worker_type, :null))
+      _assert_valid_backend_type(@_backend_type)
       _assert (@_options[:uuid] =~ /^[a-z0-9_-]{1,64}$/), 'uuid should be alpha'
       _assert_valid_timeout(@_options[:timeout])
 
-      @_worker_type = @_options.fetch(:worker_type)
 
       unless @_options[:lazy]
         _conn.get('/pulse').tap do |response|
@@ -130,17 +131,17 @@ module Routemaster
       _assert timestamp.kind_of?(Integer), 'not an integer'
     end
 
-    def _assert_valid_worker_type(worker_type)
-      workers = Routemaster::Workers::WORKER_NAMES
-      _assert workers.include?(worker_type), "unknown worker type, must be one of #{workers.map{ |w| ":#{w}" }.join(", ")}"
-      worker_type
+    def _assert_valid_backend_type(backend_type)
+      backends = Backends::NAMES
+      _assert backends.include?(backend_type.to_s), "unknown backend type, must be one of #{backends.map{ |w| "Routemaster::Backends::#{w}" }.join(", ")}"
+      backend_type
     end
 
     def _send_event(event, topic, callback, timestamp = nil)
       _assert_valid_url(callback)
       _assert_valid_topic(topic)
       _assert_valid_timestamp(timestamp) if timestamp
-      _worker.send_event(event, topic, callback, timestamp)
+      _backend.send_event(event, topic, callback, timestamp)
     end
 
     def _assert(condition, message)
@@ -151,8 +152,8 @@ module Routemaster
       @_conn ||= Client::Connection.new(@_options)
     end
 
-    def _worker
-      @_worker ||= Routemaster::Workers::MAP[@_worker_type].configure(@_options)
+    def _backend
+      @_worker ||= @_backend_type.configure(@_options)
     end
   end
 end

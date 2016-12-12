@@ -41,7 +41,8 @@ describe Routemaster::Client do
     end
 
     it 'fails with an invalid worker_type' do
-      options[:worker_type] = :jeff
+      Jeff = double
+      options[:backend_type] = Jeff
       expect { subject }.to raise_error(ArgumentError)
     end
 
@@ -195,37 +196,37 @@ describe Routemaster::Client do
     end
   end
 
- context "With the sidekiq background worker" do
-   before do
-     options[:worker_type] = :sidekiq
-   end
+  context "With the sidekiq back end" do
+    before do
+      options[:backend_type] = Routemaster::Client::Backends::Sidekiq
+    end
 
-   around do |example|
-     Sidekiq::Testing.inline! do
-       example.run
-     end
-   end
+    around do |example|
+      Sidekiq::Testing.inline! do
+        example.run
+      end
+    end
 
-   describe '#created' do
-     let(:event) { 'created' }
-     it_behaves_like 'an event sender'
-   end
+    describe '#created' do
+      let(:event) { 'created' }
+      it_behaves_like 'an event sender'
+    end
 
-   describe '#updated' do
-     let(:event) { 'updated' }
-     it_behaves_like 'an event sender'
-   end
+    describe '#updated' do
+      let(:event) { 'updated' }
+      it_behaves_like 'an event sender'
+    end
 
-   describe '#deleted' do
-     let(:event) { 'deleted' }
-     it_behaves_like 'an event sender'
-   end
+    describe '#deleted' do
+      let(:event) { 'deleted' }
+      it_behaves_like 'an event sender'
+    end
 
-   describe '#noop' do
-     let(:event) { 'noop' }
-     it_behaves_like 'an event sender'
-   end
- end
+    describe '#noop' do
+      let(:event) { 'noop' }
+      it_behaves_like 'an event sender'
+    end
+  end
 
   describe '#subscribe' do
     let(:perform) { subject.subscribe(subscribe_options) }

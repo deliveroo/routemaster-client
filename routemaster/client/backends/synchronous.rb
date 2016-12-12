@@ -1,7 +1,7 @@
 require 'routemaster/client/connection'
 
-module Routemaster::Workers
-  class Null
+module Routemaster::Client::Backends
+  class Synchronous
 
     class << self
       def configure(options)
