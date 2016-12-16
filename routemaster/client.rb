@@ -136,7 +136,7 @@ module Routemaster
 
       def assert_valid_max_events!(max)
         unless (1..10_000).include?(max)
-          raise  InvalidArgumentError, "max events '#{max}' is invalid, must be between 1 and 10,000"
+          raise InvalidArgumentError, "max events '#{max}' is invalid, must be between 1 and 10,000"
         end
       end
 

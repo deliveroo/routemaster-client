@@ -53,25 +53,25 @@ module Routemaster
 
         def_delegators :'Routemaster::Client::Configuration', :url, :timeout, :uuid
 
-          def _stringify_keys(hash)
-            hash.dup.tap do |h|
-              h.keys.each do |k|
-                h[k.to_s] = h.delete(k)
-              end
+        def _stringify_keys(hash)
+          hash.dup.tap do |h|
+            h.keys.each do |k|
+              h[k.to_s] = h.delete(k)
             end
           end
+        end
 
-          def _conn
-            @_conn ||= Faraday.new(url, ssl: { verify: true }) do |f|
-              f.request :retry, max: 2, interval: 100e-3, backoff_factor: 2
-              f.request :basic_auth, uuid, 'x'
-              f.adapter :typhoeus
+        def _conn
+          @_conn ||= Faraday.new(url, ssl: { verify: true }) do |f|
+            f.request :retry, max: 2, interval: 100e-3, backoff_factor: 2
+            f.request :basic_auth, uuid, 'x'
+            f.adapter :typhoeus
 
-              f.options.timeout      = timeout
-              f.options.open_timeout = timeout
-            end
+            f.options.timeout      = timeout
+            f.options.open_timeout = timeout
           end
         end
       end
     end
   end
+end
