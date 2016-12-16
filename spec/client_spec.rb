@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'spec/support/configuration_helper'
 require 'routemaster/client'
+require 'routemaster/client/backends/sidekiq'
 require 'routemaster/topic'
 require 'webmock/rspec'
 require 'sidekiq/testing'
@@ -208,6 +209,8 @@ describe Routemaster::Client do
   end
 
  context "With the sidekiq back end" do
+   reset_sidekiq_config_between_tests!
+
    before do
      options[:async_backend] = Routemaster::Client::Backends::Sidekiq.configure do |config|
        config.queue = :realtime

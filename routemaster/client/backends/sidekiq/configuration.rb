@@ -5,11 +5,8 @@ module Routemaster
         class Configuration
           class << self
 
-            attr_reader :sidekiq_options
-
             def configure
               yield self
-              self.sidekiq_options = _sidekiq_options.clone
             end
 
             def queue=(value)
@@ -26,6 +23,10 @@ module Routemaster
 
             def pool=(value)
               _sidekiq_options['pool'] = stringify_symbol(value)
+            end
+
+            def sidekiq_options
+              _sidekiq_options.clone
             end
 
             private

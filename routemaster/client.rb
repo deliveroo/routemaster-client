@@ -1,4 +1,4 @@
-require 'routemaster/client/backends'
+require 'routemaster/client/backends/synchronous'
 require 'routemaster/client/connection'
 require 'routemaster/client/configuration'
 require 'routemaster/client/version'
