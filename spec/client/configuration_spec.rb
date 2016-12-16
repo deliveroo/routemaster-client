@@ -1,12 +1,10 @@
 require 'spec_helper'
+require 'spec/support/configuration_helper'
 require 'routemaster/client/configuration'
 
 describe Routemaster::Client::Configuration do
 
-  before do
-    Routemaster::Client.send(:remove_const, :Configuration)
-    load 'routemaster/client/configuration.rb'
-  end
+  reset_config_between_tests!
 
   describe '#configure' do
     describe 'url' do

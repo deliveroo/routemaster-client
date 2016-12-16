@@ -1,21 +1,20 @@
 require 'spec_helper'
+require 'spec/support/configuration_helper'
 require 'routemaster/client'
 require 'routemaster/topic'
 require 'webmock/rspec'
 require 'sidekiq/testing'
 
 describe Routemaster::Client do
+
+  reset_config_between_tests!
+
   let(:options) {{
     url:        'https://bus.example.com',
     uuid:       'john_doe',
     verify_ssl:  false,
   }}
   let(:pulse_response) { 204 }
-
-  before do
-    Routemaster::Client.send(:remove_const, :Configuration)
-    load 'routemaster/client/configuration.rb'
-  end
 
   subject do
     Routemaster::Client.configure do |config|
