@@ -22,7 +22,7 @@ module Routemaster
       def configure
         self.tap do
           Configuration.configure do |c|
-            yield(c)
+            yield c
           end
           check_pulse! unless lazy
         end
@@ -33,7 +33,7 @@ module Routemaster
       end
 
       def created_async(topic, callback, timestamp = nil)
-        send_event('create', topic, callback, timestamp)
+        send_event('create', topic, callback, timestamp, async: true)
       end
 
       def updated(topic, callback, timestamp = nil)
@@ -41,7 +41,7 @@ module Routemaster
       end
 
       def updated_async(topic, callback, timestamp = nil)
-        send_event('update', topic, callback, timestamp)
+        send_event('update', topic, callback, timestamp, async: true)
       end
 
       def deleted(topic, callback, timestamp = nil)

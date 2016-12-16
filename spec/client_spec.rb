@@ -58,6 +58,17 @@ describe Routemaster::Client do
     end
   end
 
+  shared_examples 'an unconfigured async event sender' do
+    let(:callback) { 'https://app.example.com/widgets/123' }
+    let(:topic)    { 'widgets' }
+    let(:perform)  { subject.send(method, topic, callback) }
+    let(:http_status) { nil }
+
+    it 'raises an error' do
+      expect { perform }.to raise_error(Routemaster::Client::MissingAsyncBackendError)
+    end
+  end
+
   shared_examples 'an event sender' do
     let(:callback) { 'https://app.example.com/widgets/123' }
     let(:topic)    { 'widgets' }
@@ -161,9 +172,19 @@ describe Routemaster::Client do
       it_behaves_like 'an event sender'
     end
 
+    describe '#created_async' do
+      let(:method) { 'created_async' }
+      it_behaves_like 'an unconfigured async event sender'
+    end
+
     describe '#updated' do
       let(:event) { 'updated' }
       it_behaves_like 'an event sender'
+    end
+
+    describe '#updated_async' do
+      let(:method) { 'updated_async' }
+      it_behaves_like 'an unconfigured async event sender'
     end
 
     describe '#deleted' do
@@ -171,43 +192,61 @@ describe Routemaster::Client do
       it_behaves_like 'an event sender'
     end
 
+    describe '#deleted_async' do
+      let(:method) { 'updated_async' }
+      it_behaves_like 'an unconfigured async event sender'
+    end
+
     describe '#noop' do
       let(:event) { 'noop' }
       it_behaves_like 'an event sender'
     end
+
+    describe '#noop_async' do
+      let(:method) { 'updated_async' }
+      it_behaves_like 'an unconfigured async event sender'
+    end
   end
 
- #context "With the sidekiq back end" do
- #  before do
- #    options[:backend_type] = Routemaster::Client::Backends::Sidekiq
- #  end
+ context "With the sidekiq back end" do
+   before do
+     options[:async_backend] = Routemaster::Client::Backends::Sidekiq.configure do |config|
+       config.queue = :realtime
+       config.retry = true
+     end
+   end
 
- #  around do |example|
- #    Sidekiq::Testing.inline! do
- #      example.run
- #    end
- #  end
+   around do |example|
+     Sidekiq::Testing.inline! do
+       example.run
+     end
+   end
 
- #  describe '#created' do
- #    let(:event) { 'created' }
- #    it_behaves_like 'an event sender'
- #  end
+   describe '#created' do
+     let(:event) { 'created' }
+     it_behaves_like 'an event sender'
+   end
 
- #  describe '#updated' do
- #    let(:event) { 'updated' }
- #    it_behaves_like 'an event sender'
- #  end
+    describe '#created_async' do
+      let(:event) { 'created_async' }
+      it_behaves_like 'an event sender'
+    end
 
- #  describe '#deleted' do
- #    let(:event) { 'deleted' }
- #    it_behaves_like 'an event sender'
- #  end
+   describe '#updated' do
+     let(:event) { 'updated' }
+     it_behaves_like 'an event sender'
+   end
 
- #  describe '#noop' do
- #    let(:event) { 'noop' }
- #    it_behaves_like 'an event sender'
- #  end
- #end
+   describe '#deleted' do
+     let(:event) { 'deleted' }
+     it_behaves_like 'an event sender'
+   end
+
+   describe '#noop' do
+     let(:event) { 'noop' }
+     it_behaves_like 'an event sender'
+   end
+ end
 
   describe '#subscribe' do
     let(:perform) { subject.subscribe(subscribe_options) }
