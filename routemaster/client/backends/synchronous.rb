@@ -4,19 +4,9 @@ module Routemaster
   class Client
     module Backends
       class Synchronous
-
         class << self
-          def configure(options)
-            new(options)
-          end
-        end
-
-        def initialize(options)
-          @conn = Routemaster::Client::Connection.new(options)
-        end
-
-        def send_event(event, topic, callback, timestamp = nil)
-          @conn.send_event(event, topic, callback, timestamp)
+          extend Forwardable
+          def_delegator :'Routemaster::Client::Connection', :send_event
         end
       end
     end
