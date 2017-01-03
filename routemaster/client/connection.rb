@@ -6,12 +6,6 @@ module Routemaster
       class << self
         extend Forwardable
 
-        def initialize(options)
-          @_url = options[:url]
-          @_uuid = options[:uuid]
-          @_timeout = options.fetch(:timeout, 1)
-        end
-
         def post(path, &block)
           http(:post, path, &block)
         end
