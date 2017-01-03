@@ -3,7 +3,7 @@ require 'routemaster/client/errors'
 require 'routemaster/client/backends/missing_asynchronous'
 
 module Routemaster
-  class Client
+  module Client
     class Configuration
       class << self
         include AssertionHelpers

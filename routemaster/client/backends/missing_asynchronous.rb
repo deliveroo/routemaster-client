@@ -1,7 +1,7 @@
 require 'routemaster/client/errors'
 
 module Routemaster
-  class Client
+  module Client
     module Backends
       class MissingAsynchronous
         class << self

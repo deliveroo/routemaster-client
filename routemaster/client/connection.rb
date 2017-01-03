@@ -1,8 +1,8 @@
 require 'routemaster/client/configuration'
 
 module Routemaster
-  class Client
-    class Connection
+  module Client
+    module Connection
       class << self
         extend Forwardable
 

@@ -1,5 +1,5 @@
 module Routemaster
-  class Client
+  module Client
     class Error < StandardError; end
 
     class InvalidArgumentError       < Error; end

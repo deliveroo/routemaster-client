@@ -1,5 +1,5 @@
 module Routemaster
-  class Client
+  module Client
     module Backends
       class Sidekiq
         class Configuration

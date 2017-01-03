@@ -1,7 +1,7 @@
 require 'routemaster/client/connection'
 
 module Routemaster
-  class Client
+  module Client
     module Backends
       class Synchronous
         class << self

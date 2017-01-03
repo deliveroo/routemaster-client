@@ -1,7 +1,7 @@
 require 'uri'
 
 module Routemaster
-  class Client
+  module Client
     module AssertionHelpers
       def assert_valid_url_throwing_error!(url, error_class)
         begin

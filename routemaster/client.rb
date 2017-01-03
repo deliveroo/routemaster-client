@@ -13,7 +13,7 @@ require 'typhoeus/adapters/faraday'
 require 'oj'
 
 module Routemaster
-  class Client
+  module Client
     class << self
       extend Forwardable
       include AssertionHelpers

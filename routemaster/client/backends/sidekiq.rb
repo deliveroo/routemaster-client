@@ -3,7 +3,7 @@ require 'routemaster/client/backends/sidekiq/worker'
 require 'routemaster/client/backends/sidekiq/configuration'
 
 module Routemaster
-  class Client
+  module Client
     module Backends
       class Sidekiq
         class << self
