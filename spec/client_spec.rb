@@ -193,7 +193,7 @@ describe Routemaster::Client do
     end
 
     describe '#deleted_async' do
-      let(:method) { 'updated_async' }
+      let(:method) { 'deleted_async' }
       it_behaves_like 'an unconfigured async event sender'
     end
 
@@ -203,7 +203,7 @@ describe Routemaster::Client do
     end
 
     describe '#noop_async' do
-      let(:method) { 'updated_async' }
+      let(:method) { 'noop_async' }
       it_behaves_like 'an unconfigured async event sender'
     end
   end
@@ -239,13 +239,28 @@ describe Routemaster::Client do
      it_behaves_like 'an event sender'
    end
 
+   describe '#updated_async' do
+     let(:event) { 'updated_async' }
+     it_behaves_like 'an event sender'
+   end
+
    describe '#deleted' do
      let(:event) { 'deleted' }
      it_behaves_like 'an event sender'
    end
 
+   describe '#deleted_async' do
+     let(:event) { 'deleted_async' }
+     it_behaves_like 'an event sender'
+   end
+
    describe '#noop' do
      let(:event) { 'noop' }
+     it_behaves_like 'an event sender'
+   end
+
+   describe '#noop_async' do
+     let(:event) { 'noop_async' }
      it_behaves_like 'an event sender'
    end
  end
