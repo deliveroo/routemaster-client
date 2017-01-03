@@ -179,6 +179,8 @@ module Routemaster
           raise 'cannot connect to bus' unless response.success?
         end
       end
+
+      private :async_backend, :lazy
     end
   end
 end

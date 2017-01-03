@@ -10,6 +10,8 @@ module Routemaster
 
           def_delegator :'Routemaster::Client::Connection', :send_event
           alias :perform :send_event
+
+          private :send_event
         end
       end
     end
