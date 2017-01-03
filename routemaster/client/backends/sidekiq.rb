@@ -1,4 +1,5 @@
 require 'sidekiq'
+require 'forwardable'
 require 'routemaster/client/backends/sidekiq/worker'
 require 'routemaster/client/backends/sidekiq/configuration'
 
