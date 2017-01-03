@@ -51,7 +51,7 @@ module Routemaster
 
         private
 
-        def_delegators :'Routemaster::Client::Configuration', :url, :timeout, :uuid
+        def_delegators :'Routemaster::Client::Configuration', :url, :timeout, :uuid, :verify_ssl
 
         def _stringify_keys(hash)
           hash.dup.tap do |h|
@@ -62,7 +62,7 @@ module Routemaster
         end
 
         def _conn
-          @_conn ||= Faraday.new(url, ssl: { verify: true }) do |f|
+          @_conn ||= Faraday.new(url, ssl: { verify: verify_ssl }) do |f|
             f.request :retry, max: 2, interval: 100e-3, backoff_factor: 2
             f.request :basic_auth, uuid, 'x'
             f.adapter :typhoeus
