@@ -3,6 +3,7 @@ require 'routemaster/client/connection'
 require 'routemaster/client/configuration'
 require 'routemaster/client/version'
 require 'routemaster/client/errors'
+require 'routemaster/client/assertion_helpers'
 require 'routemaster/topic'
 require 'uri'
 require 'json'
@@ -15,6 +16,7 @@ module Routemaster
   class Client
     class << self
       extend Forwardable
+      include AssertionHelpers
 
       def_delegator :'Routemaster::Client::Configuration', :async_backend
       def_delegator :'Routemaster::Client::Configuration', :lazy
@@ -124,14 +126,7 @@ module Routemaster
       end
 
       def assert_valid_url!(url)
-        begin
-          uri = URI.parse(url)
-          unless uri.is_a? URI::HTTPS
-            raise InvalidArgumentError, "url '#{url}' is invalid, must be an https url"
-          end
-        rescue URI::InvalidURIError
-          raise InvalidArgumentError, "url '#{url}' is invalid, must be an https url"
-        end
+        assert_valid_url_throwing_error!(url, InvalidArgumentError)
       end
 
       def assert_valid_max_events!(max)

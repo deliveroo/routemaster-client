@@ -1,11 +1,12 @@
+require 'routemaster/client/assertion_helpers'
 require 'routemaster/client/errors'
 require 'routemaster/client/backends/missing_asynchronous'
-require 'uri'
 
 module Routemaster
   class Client
     class Configuration
       class << self
+        include AssertionHelpers
 
         DEFAULT_TIMEOUT = 5
         DEFAULT_LAZY = false
@@ -32,14 +33,7 @@ module Routemaster
         end
 
         def assert_valid_url!(url)
-          begin
-            uri = URI.parse(url)
-            unless uri.is_a? URI::HTTPS
-              raise InvalidAttributeError, "url '#{url}' is invalid, must be an https url"
-            end
-          rescue URI::InvalidURIError
-            raise InvalidAttributeError, "url '#{url}' is invalid, must be an https url"
-          end
+          assert_valid_url_throwing_error!(url, InvalidAttributeError)
         end
 
         def assert_valid_uuid!(uuid)
