@@ -10,19 +10,19 @@ module Routemaster
             end
 
             def queue=(value)
-              _sidekiq_options['queue'] = stringify_symbol(value)
+              _sidekiq_options['queue'] = _stringify_symbol(value)
             end
 
             def backtrace=(value)
-              _sidekiq_options['backtrace'] = stringify_symbol(value)
+              _sidekiq_options['backtrace'] = _stringify_symbol(value)
             end
 
             def retry=(value)
-              _sidekiq_options['retry'] = stringify_symbol(value)
+              _sidekiq_options['retry'] = _stringify_symbol(value)
             end
 
             def pool=(value)
-              _sidekiq_options['pool'] = stringify_symbol(value)
+              _sidekiq_options['pool'] = _stringify_symbol(value)
             end
 
             def sidekiq_options
@@ -37,7 +37,7 @@ module Routemaster
               @_sidekiq_options ||= {}
             end
 
-            def stringify_symbol(value)
+            def _stringify_symbol(value)
               value.is_a?(Symbol) ? value.to_s : value
             end
           end

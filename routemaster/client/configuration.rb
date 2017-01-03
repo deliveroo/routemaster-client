@@ -16,27 +16,27 @@ module Routemaster
 
         def configure
           yield self
-          validate_all_options!
+          _validate_all_options!
         end
 
         private
 
-        def validate_all_options!
-          assert_present! url: url, uuid: uuid
-          assert_valid_url!(url)
-          assert_valid_uuid!(uuid)
-          timeout ? assert_valid_timeout!(timeout) : self.timeout = DEFAULT_TIMEOUT
+        def _validate_all_options!
+          _assert_present! url: url, uuid: uuid
+          _assert_valid_url!(url)
+          _assert_valid_uuid!(uuid)
+          timeout ? _assert_valid_timeout!(timeout) : self.timeout = DEFAULT_TIMEOUT
 
-          lazy.nil? ?  self.lazy = DEFAULT_LAZY : assert_boolean!(lazy: lazy)
-          verify_ssl.nil? ? self.verify_ssl = DEFAULT_VERIFY_SSL : assert_boolean!(verify_ssl: verify_ssl)
+          lazy.nil? ?  self.lazy = DEFAULT_LAZY : _assert_boolean!(lazy: lazy)
+          verify_ssl.nil? ? self.verify_ssl = DEFAULT_VERIFY_SSL : _assert_boolean!(verify_ssl: verify_ssl)
           self.async_backend ||= Backends::MissingAsynchronous
         end
 
-        def assert_valid_url!(url)
+        def _assert_valid_url!(url)
           assert_valid_url_throwing_error!(url, InvalidAttributeError)
         end
 
-        def assert_valid_uuid!(uuid)
+        def _assert_valid_uuid!(uuid)
           raise MissingAttributeError, "uuid is required" unless uuid
           unless  uuid =~ /^[a-z0-9_-]{1,64}$/
             message =  "uuid '#{uuid}' is invalid, must only contain alphanumeric characters " +
@@ -45,13 +45,13 @@ module Routemaster
           end
         end
 
-        def assert_valid_timeout!(timeout)
+        def _assert_valid_timeout!(timeout)
           unless (0..3_600_000).include? timeout
             raise InvalidAttributeError, "timeout '#{timeout}' is invalid, must be an integer between 0 and 3,600,000"
           end
         end
 
-        def assert_boolean!(**kwargs)
+        def _assert_boolean!(**kwargs)
           kwargs.each do |name, value|
             unless [true, false].include? value
               raise InvalidAttributeError, "#{name} '#{value}' is invalid, must be a boolean value: true or false"
@@ -59,7 +59,7 @@ module Routemaster
           end
         end
 
-        def assert_present!(**kwargs)
+        def _assert_present!(**kwargs)
           kwargs.each do |name, value|
             raise MissingAttributeError, "#{name} is required" unless value
           end
