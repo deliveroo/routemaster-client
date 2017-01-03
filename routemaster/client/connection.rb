@@ -30,6 +30,9 @@ module Routemaster
             r.body = Oj.dump(_stringify_keys data)
           end
           fail "event rejected (#{response.status})" unless response.success?
+
+          # Any issues would have caused an exception to be thrown
+          true
         end
 
         def subscribe(options)

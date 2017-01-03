@@ -24,6 +24,9 @@ module Routemaster
           def send_event(*args)
             opts = @options.merge('args' => args)
             ::Sidekiq::Client.push opts
+
+            # The push will throw an exception if there is a problem
+            true
           end
         end
       end

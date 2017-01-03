@@ -111,6 +111,10 @@ describe Routemaster::Client do
         topic.replace 'foo123$bar'
         expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
       end
+
+      it 'returns true' do
+        expect(perform).to eq true
+      end
     end
 
     context 'when the bus responds 500' do
