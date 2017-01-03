@@ -407,18 +407,34 @@ describe Routemaster::Client do
       ]
     end
 
-    before do
-      @stub = stub_request(:get, 'https://bus.example.com/topics').
-        with(basic_auth: [options[:uuid], 'x']).
-        with { |r|
+    context 'the connection to the bus is successful' do
+      before do
+        @stub = stub_request(:get, 'https://bus.example.com/topics').
+          with(basic_auth: [options[:uuid], 'x']).
+          with { |r|
           r.headers['Content-Type'] == 'application/json'
         }.to_return {
           { status: 200, body: expected_result.to_json }
         }
+      end
+
+      it 'expects a collection of topics' do
+        expect(perform.map(&:attributes)).to eql(expected_result)
+      end
     end
 
-    it 'expects a collection of topics' do
-      expect(perform.map(&:attributes)).to eql(expected_result)
+    context 'the connection to the bus errors' do
+      before do
+        @stub = stub_request(:get, 'https://bus.example.com/topics').
+          with(basic_auth: [options[:uuid], 'x']).
+          with { |r|
+          r.headers['Content-Type'] == 'application/json'
+        }.to_return(status: 500)
+      end
+
+      it 'expects a collection of topics' do
+        expect { perform }.to raise_error(RuntimeError)
+      end
     end
   end
 
