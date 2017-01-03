@@ -1,8 +1,9 @@
 module Routemaster
   module Client
     class Error < StandardError; end
+    class ArgumentError < ArgumentError; end
 
-    class InvalidArgumentError       < Error; end
+    class InvalidArgumentError       < ArgumentError; end
     class ConfigurationError         < Error; end
     class MissingAsyncBackendError   < Error; end
     class MissingAttributeError      < ConfigurationError; end
