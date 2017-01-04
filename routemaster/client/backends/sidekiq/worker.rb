@@ -1,22 +1,17 @@
 require 'routemaster/client/connection'
 
 module Routemaster
-  class Client
+  module Client
     module Backends
       class Sidekiq
         class Worker
           include ::Sidekiq::Worker
+          extend Forwardable
 
-          def perform(event, topic, callback, timestamp, options)
-            conn = Routemaster::Client::Connection.new(_symbolize_keys(options))
-            conn.send_event(event, topic, callback, timestamp)
-          end
+          def_delegator :'Routemaster::Client::Connection', :send_event
+          alias :perform :send_event
 
-          private
-
-          def _symbolize_keys(hash)
-            Hash[hash.map{|(k,v)| [k.to_sym,v]}]
-          end
+          private :send_event
         end
       end
     end
