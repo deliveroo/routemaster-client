@@ -25,27 +25,42 @@ Or install it yourself as:
 
 ```ruby
 require 'routemaster/client'
-client = Routemaster::Client.new(url: 'https://bus.example.com', uuid: 'demo')
+Routemaster::Client.configure do |config|
+  config.url = 'https://bs.example.com'
+  config.uuid = 'demo'
+end
 ```
 
 You can also specify a timeout value in seconds if you like with the ```timeout``` option.
 
 ```ruby
-Routemaster::Client.new(url: 'https://bus.example.com', uuid: 'demo', timeout: 2)
+Routemaster::Client.configure do |config|
+  config.url = 'https://bs.example.com'
+  config.uuid = 'demo'
+  config.timeout = 2
+end
 ```
 
 If you are using Sidekiq in your project, you can specify the usage of a Sidekiq backend, where event sending will be processed asynchronously.
 
 ```ruby
-Routemaster::Client.new(url, 'https://bus.example.com', uuid: 'demo', backend_type: Routemaster::Client::Backends::Sidekiq)
+Routemaster::Client.configure do |config|
+  config.url = 'https://bs.example.com'
+  config.uuid = 'demo'
+  config.timeout = 2
+  config.async_backend = Routemaster::Client::Backends::Sidekiq.configure do |sidekiq|
+  	sidekiq.queue = :realtime
+  	sidekiq.retry = false
+  end
+end
 ```
 
 **Push** an event about an entity in the topic `widgets` with a callback URL:
 
 ```ruby
-client.created('widgets', 'https://app.example.com/widgets/1')
-client.updated('widgets', 'https://app.example.com/widgets/2')
-client.noop('widgets', 'https://app.example.com/widgets/3')
+Routemaster::Client.created('widgets', 'https://app.example.com/widgets/1')
+Routemaster::Client.updated('widgets', 'https://app.example.com/widgets/2')
+Routemaster::Client.noop('widgets', 'https://app.example.com/widgets/3')
 ```
 
 There are methods for the four canonical event types: `created`, `updated`,
@@ -59,14 +74,24 @@ A timestamp argument may be passed (it will be set by the bus automatically
 otherwise); it must be an integer number of milliseconds since the UNIX Epoch:
 
 ```ruby
-client.created('widgets', 'https://app.example.com/widgets/1', 1473080555409)
+Routemaster::Client.created('widgets', 'https://app.example.com/widgets/1', 1473080555409)
 ```
+
+**Async**
+You can also push events asynchronously if you have an async backend defined, for each
+event method there is a corresponding `event_async` method. eg
+```ruby
+   Routemaster::Client.updated_async('widgets', 'https://app.example.com/widgets/2')
+```
+
+You cannot use these methods without defining an async backend, if you try then an error will
+be raised.
 
 **Subscribe** to be notified about `widgets` and `kitten` at most 60 seconds after
 events, in batches of at most 500 events, to a given callback URL:
 
 ```ruby
-client.subscribe(
+Routemaster::Client.subscribe(
   topics:   ['widgets', 'kitten'],
   callback: 'https://app.example.com/events',
   uuid:     'demo',
@@ -102,29 +127,29 @@ gem](https://github.com/krisleech/wisper#wisper).
 **Unsubscribe** from a single topic:
 
 ```ruby
-client.unsubscribe('widgets')
+Routemaster::Client.unsubscribe('widgets')
 ```
 
 **Unsubscribe** from all topics:
 
 ```ruby
-client.unsubscribe_all
+Routemaster::Client.unsubscribe_all
 ```
 
 **Delete** a topic (only possible if you're the emitter for this topic):
 
 ```ruby
-client.delete_topic('widgets')
+Routemaster::Client.delete_topic('widgets')
 ```
 
 
 **Monitor** the status of topics and subscriptions:
 
 ```ruby
-client.monitor_topics
+Routemaster::Client.monitor_topics
 #=> [ #<Routemaster::Topic:XXXX @name="widgets", @publisher="demo", @events=12589>, ...]
 
-client.monitor_subscriptions
+Routemaster::Client.monitor_subscriptions
 #=> [ {
 #     subscriber: 'bob',
 #     callback:   'https://app.example.com/events',

@@ -1,5 +1,5 @@
 module Routemaster
-  class Client
+  module Client
     VERSION = '3.0.0'
   end
 end

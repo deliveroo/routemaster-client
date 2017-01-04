@@ -1,51 +1,37 @@
 require 'spec_helper'
+require 'spec/support/configuration_helper'
 require 'routemaster/client'
+require 'routemaster/client/backends/sidekiq'
 require 'routemaster/topic'
 require 'webmock/rspec'
 require 'sidekiq/testing'
 
 describe Routemaster::Client do
+
+  reset_config_between_tests!
+
   let(:options) {{
     url:        'https://bus.example.com',
     uuid:       'john_doe',
-    verify_ssl: false,
+    verify_ssl:  false,
   }}
   let(:pulse_response) { 204 }
 
-  subject { described_class.new(options) }
+  subject do
+    Routemaster::Client.configure do |config|
+      options.each do |key, val|
+        config.send(:"#{key}=", val)
+      end
+    end
+  end
 
   before do
-    @stub_pulse = stub_request(:get, %r{^https://bus.example.com/pulse$}).
+    stub_request(:get, %r{^https://bus.example.com/pulse$}).
       with(basic_auth: [options[:uuid], 'x']).
       to_return(status: pulse_response)
   end
 
-  describe '#initialize' do
-    it 'passes with valid arguments' do
-      expect { subject }.not_to raise_error
-    end
-
-    it 'fails with a non-SSL URL' do
-      options[:url].sub!(/https/, 'http')
-      expect { subject }.to raise_error(ArgumentError)
-    end
-
-    it 'fails with a bad URL' do
-      options[:url].replace('foobar')
-      expect { subject }.to raise_error(ArgumentError)
-    end
-
-    it 'fails with a bad client id' do
-      options[:uuid].replace('123 $%')
-      expect { subject }.to raise_error(ArgumentError)
-    end
-
-    it 'fails with an invalid worker_type' do
-      Jeff = double
-      options[:backend_type] = Jeff
-      expect { subject }.to raise_error(ArgumentError)
-    end
-
+  describe "configure" do
     context 'when connection fails' do
       before do
         stub_request(:any, %r{^https://bus.example.com}).
@@ -70,10 +56,16 @@ describe Routemaster::Client do
         expect { subject }.to raise_error(RuntimeError)
       end
     end
+  end
 
-    it 'fails if the timeout value is not an integer' do
-      options[:timeout] = 'timeout'
-      expect { subject }.to raise_error(ArgumentError)
+  shared_examples 'an unconfigured async event sender' do
+    let(:callback) { 'https://app.example.com/widgets/123' }
+    let(:topic)    { 'widgets' }
+    let(:perform)  { subject.send(method, topic, callback) }
+    let(:http_status) { nil }
+
+    it 'raises an error' do
+      expect { perform }.to raise_error(Routemaster::Client::MissingAsyncBackendError)
     end
   end
 
@@ -107,17 +99,21 @@ describe Routemaster::Client do
 
       it 'fails with a bad callback URL' do
         callback.replace 'http.foo.bar'
-        expect { perform }.to raise_error(ArgumentError)
+        expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
       end
 
       it 'fails with a non-SSL URL' do
         callback.replace 'http://example.com'
-        expect { perform }.to raise_error(ArgumentError)
+        expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
       end
 
       it 'fails with a bad topic name' do
         topic.replace 'foo123$bar'
-        expect { perform }.to raise_error(ArgumentError, 'bad topic name: must only include letters and underscores')
+        expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
+      end
+
+      it 'returns true' do
+        expect(perform).to eq true
       end
     end
 
@@ -160,7 +156,7 @@ describe Routemaster::Client do
         let(:timestamp) { 'foo' }
 
         it 'fails' do
-          expect { perform }.to raise_error(ArgumentError)
+          expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
         end
       end
 
@@ -168,7 +164,7 @@ describe Routemaster::Client do
         let(:timestamp) { 123.45 }
 
         it 'fails' do
-          expect { perform }.to raise_error(ArgumentError)
+          expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
         end
       end
     end
@@ -180,36 +176,9 @@ describe Routemaster::Client do
       it_behaves_like 'an event sender'
     end
 
-    describe '#updated' do
-      let(:event) { 'updated' }
-      it_behaves_like 'an event sender'
-    end
-
-    describe '#deleted' do
-      let(:event) { 'deleted' }
-      it_behaves_like 'an event sender'
-    end
-
-    describe '#noop' do
-      let(:event) { 'noop' }
-      it_behaves_like 'an event sender'
-    end
-  end
-
-  context "With the sidekiq back end" do
-    before do
-      options[:backend_type] = Routemaster::Client::Backends::Sidekiq
-    end
-
-    around do |example|
-      Sidekiq::Testing.inline! do
-        example.run
-      end
-    end
-
-    describe '#created' do
-      let(:event) { 'created' }
-      it_behaves_like 'an event sender'
+    describe '#created_async' do
+      let(:method) { 'created_async' }
+      it_behaves_like 'an unconfigured async event sender'
     end
 
     describe '#updated' do
@@ -217,16 +186,88 @@ describe Routemaster::Client do
       it_behaves_like 'an event sender'
     end
 
+    describe '#updated_async' do
+      let(:method) { 'updated_async' }
+      it_behaves_like 'an unconfigured async event sender'
+    end
+
     describe '#deleted' do
       let(:event) { 'deleted' }
       it_behaves_like 'an event sender'
+    end
+
+    describe '#deleted_async' do
+      let(:method) { 'deleted_async' }
+      it_behaves_like 'an unconfigured async event sender'
     end
 
     describe '#noop' do
       let(:event) { 'noop' }
       it_behaves_like 'an event sender'
     end
+
+    describe '#noop_async' do
+      let(:method) { 'noop_async' }
+      it_behaves_like 'an unconfigured async event sender'
+    end
   end
+
+ context "With the sidekiq back end" do
+   reset_sidekiq_config_between_tests!
+
+   before do
+     options[:async_backend] = Routemaster::Client::Backends::Sidekiq.configure do |config|
+       config.queue = :realtime
+       config.retry = true
+     end
+   end
+
+   around do |example|
+     Sidekiq::Testing.inline! do
+       example.run
+     end
+   end
+
+   describe '#created' do
+     let(:event) { 'created' }
+     it_behaves_like 'an event sender'
+   end
+
+    describe '#created_async' do
+      let(:event) { 'created_async' }
+      it_behaves_like 'an event sender'
+    end
+
+   describe '#updated' do
+     let(:event) { 'updated' }
+     it_behaves_like 'an event sender'
+   end
+
+   describe '#updated_async' do
+     let(:event) { 'updated_async' }
+     it_behaves_like 'an event sender'
+   end
+
+   describe '#deleted' do
+     let(:event) { 'deleted' }
+     it_behaves_like 'an event sender'
+   end
+
+   describe '#deleted_async' do
+     let(:event) { 'deleted_async' }
+     it_behaves_like 'an event sender'
+   end
+
+   describe '#noop' do
+     let(:event) { 'noop' }
+     it_behaves_like 'an event sender'
+   end
+
+   describe '#noop_async' do
+     let(:event) { 'noop_async' }
+     it_behaves_like 'an event sender'
+   end
+ end
 
   describe '#subscribe' do
     let(:perform) { subject.subscribe(subscribe_options) }
@@ -253,27 +294,27 @@ describe Routemaster::Client do
 
     it 'fails with a bad callback' do
       subscribe_options[:callback] = 'http://example.com'
-      expect { perform }.to raise_error(ArgumentError)
+      expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
     end
 
     it 'fails with a bad timeout' do
       subscribe_options[:timeout] = -5
-      expect { perform }.to raise_error(ArgumentError)
+      expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
     end
 
     it 'fails with a bad max number of events' do
       subscribe_options[:max] = 1_000_000
-      expect { perform }.to raise_error(ArgumentError)
+      expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
     end
 
     it 'fails with a bad topic list' do
       subscribe_options[:topics] = ['widgets', 'foo123$%bar']
-      expect { perform }.to raise_error(ArgumentError)
+      expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
     end
 
     it 'fails on HTTP error' do
       @stub.to_return(status: 500)
-      expect { perform }.to raise_error(RuntimeError)
+      expect { perform }.to raise_error(RuntimeError, 'subscribe rejected')
     end
 
     it 'accepts a uuid' do
@@ -300,7 +341,7 @@ describe Routemaster::Client do
 
     it 'fails with a bad topic' do
       args.replace ['foo123%bar']
-      expect { perform }.to raise_error(ArgumentError)
+      expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
     end
 
     it 'fails on HTTP error' do
@@ -347,7 +388,7 @@ describe Routemaster::Client do
 
     it 'fails with a bad topic' do
       args.replace ['foo123%bar']
-      expect { perform }.to raise_error(ArgumentError)
+      expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
     end
 
     it 'fails on HTTP error' do
@@ -370,23 +411,40 @@ describe Routemaster::Client do
       ]
     end
 
-    before do
-      @stub = stub_request(:get, 'https://bus.example.com/topics').
-        with(basic_auth: [options[:uuid], 'x']).
-        with { |r|
+    context 'the connection to the bus is successful' do
+      before do
+        @stub = stub_request(:get, 'https://bus.example.com/topics').
+          with(basic_auth: [options[:uuid], 'x']).
+          with { |r|
           r.headers['Content-Type'] == 'application/json'
         }.to_return {
           { status: 200, body: expected_result.to_json }
         }
+      end
+
+      it 'expects a collection of topics' do
+        expect(perform.map(&:attributes)).to eql(expected_result)
+      end
     end
 
-    it 'expects a collection of topics' do
-      expect(perform.map(&:attributes)).to eql(expected_result)
+    context 'the connection to the bus errors' do
+      before do
+        @stub = stub_request(:get, 'https://bus.example.com/topics').
+          with(basic_auth: [options[:uuid], 'x']).
+          with { |r|
+          r.headers['Content-Type'] == 'application/json'
+        }.to_return(status: 500)
+      end
+
+      it 'expects a collection of topics' do
+        expect { perform }.to raise_error(RuntimeError)
+      end
     end
   end
 
   describe '#monitor_subscriptions' do
     it 'passes'
   end
+
 end
 
