@@ -22,12 +22,12 @@ module Routemaster
           _conn.send(method, path, &block)
         end
 
-        def send_event(event, topic, callback, timestamp = nil)
-          data = { type: event, url: callback, timestamp: timestamp }
+        def send_event(event, topic, callback, t: nil)
+          payload = { type: event, url: callback, timestamp: t }
 
           response = post("/topics/#{topic}") do |r|
             r.headers['Content-Type'] = 'application/json'
-            r.body = Oj.dump(_stringify_keys data)
+            r.body = Oj.dump(_stringify_keys payload)
           end
           fail "event rejected (#{response.status})" unless response.success?
 

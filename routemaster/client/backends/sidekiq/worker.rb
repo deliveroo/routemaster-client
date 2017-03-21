@@ -6,12 +6,13 @@ module Routemaster
       class Sidekiq
         class Worker
           include ::Sidekiq::Worker
-          extend Forwardable
 
-          def_delegator :'Routemaster::Client::Connection', :send_event
-          alias :perform :send_event
-
-          private :send_event
+          def perform(*args)
+            # Sidekiq does not have transparent argument serialization.
+            # This extracts the options so they can be passed on properly.
+            options = args.last.kind_of?(Hash) ? args.pop.symbolize_keys : {}
+            Routemaster::Client::Connection.send_event(*args, **options)
+          end
         end
       end
     end
