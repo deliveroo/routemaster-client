@@ -30,48 +30,48 @@ module Routemaster
         end
       end
 
-      def created(topic, callback, timestamp = nil, t: nil, async: false)
+      def created(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
         _warn_timestamp_deprecation(timestamp)
-        _send_event('create', topic, callback, t: t || timestamp, async: async)
+        _send_event('create', topic, callback, t: t || timestamp, async: async, data: data)
       end
 
-      def created_async(topic, callback, timestamp = nil, t: nil)
+      def created_async(topic, callback, timestamp = nil, t: nil, data: nil)
         _warn_timestamp_deprecation(timestamp)
         _warn_async_deprecation
-        _send_event('create', topic, callback, t: t || timestamp, async: true)
+        _send_event('create', topic, callback, t: t || timestamp, async: true, data: data)
       end
 
-      def updated(topic, callback, timestamp = nil, t: nil, async: false)
+      def updated(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
         _warn_timestamp_deprecation(timestamp)
-        _send_event('update', topic, callback, t: t || timestamp, async: async)
+        _send_event('update', topic, callback, t: t || timestamp, async: async, data: data)
       end
 
-      def updated_async(topic, callback, timestamp = nil, t: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _warn_async_deprecation
-        _send_event('update', topic, callback, t: t || timestamp, async: true)
-      end
-
-      def deleted(topic, callback, timestamp = nil, t: nil, async: false)
-        _warn_timestamp_deprecation(timestamp)
-        _send_event('delete', topic, callback, t: t || timestamp, async: async)
-      end
-
-      def deleted_async(topic, callback, timestamp = nil, t: nil)
+      def updated_async(topic, callback, timestamp = nil, t: nil, data: nil)
         _warn_timestamp_deprecation(timestamp)
         _warn_async_deprecation
-        _send_event('delete', topic, callback, t: t || timestamp, async: true)
+        _send_event('update', topic, callback, t: t || timestamp, async: true, data: data)
       end
 
-      def noop(topic, callback, timestamp = nil, t: nil, async: false)
+      def deleted(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
         _warn_timestamp_deprecation(timestamp)
-        _send_event('noop', topic, callback, t: t || timestamp, async: async)
+        _send_event('delete', topic, callback, t: t || timestamp, async: async, data: data)
       end
 
-      def noop_async(topic, callback, timestamp = nil, t: nil)
+      def deleted_async(topic, callback, timestamp = nil, t: nil, data: nil)
         _warn_timestamp_deprecation(timestamp)
         _warn_async_deprecation
-        _send_event('noop', topic, callback, t: t || timestamp, async: true)
+        _send_event('delete', topic, callback, t: t || timestamp, async: true, data: data)
+      end
+
+      def noop(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
+        _warn_timestamp_deprecation(timestamp)
+        _send_event('noop', topic, callback, t: t || timestamp, async: async, data: data)
+      end
+
+      def noop_async(topic, callback, timestamp = nil, t: nil, data: nil)
+        _warn_timestamp_deprecation(timestamp)
+        _warn_async_deprecation
+        _send_event('noop', topic, callback, t: t || timestamp, async: true, data: data)
       end
 
       def subscribe(topics:, callback:, **options)
@@ -177,13 +177,20 @@ module Routemaster
         end
       end
 
-      def _send_event(event, topic, callback, t: nil, async: false)
+      def _assert_valid_data(value)
+        !! Oj.dump(value, mode: :strict)
+      rescue TypeError => e
+        raise InvalidArgumentError, e
+      end
+
+      def _send_event(event, topic, callback, t: nil, async: false, data: nil)
         _assert_valid_url!(callback)
         _assert_valid_topic!(topic)
         _assert_valid_timestamp!(t) if t
+        _assert_valid_data(data) if data
 
         backend = async ? async_backend : _synchronous_backend
-        backend.send_event(event, topic, callback, t: t)
+        backend.send_event(event, topic, callback, t: t, data: data)
       end
 
       def _check_pulse!
