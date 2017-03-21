@@ -86,30 +86,6 @@ Routemaster::Client.subscribe(
 ```
 
 
-**Receive** events at path `/events` using a Rack middleware:
-
-```ruby
-require 'routemaster/receiver'
-
-class Listener
-  def on_events_received(batch)
-    batch.each do |event|
-      puts event['url']
-    end
-  end
-end
-
-Wisper.subscribe(Listener.new, :prefix => true)
-
-use Routemaster::Receiver, {
-  path:    '/events',
-  uuid:    'demo'
-}
-```
-
-This relies on the excellent event bus from the [wisper
-gem](https://github.com/krisleech/wisper#wisper).
-
 **Unsubscribe** from a single topic:
 
 ```ruby
