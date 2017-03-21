@@ -54,7 +54,6 @@ module Routemaster
 
       def deleted(topic, callback, timestamp = nil, t: nil, async: false)
         _warn_timestamp_deprecation(timestamp)
-        _warn_async_deprecation
         _send_event('delete', topic, callback, t: t || timestamp, async: async)
       end
 
