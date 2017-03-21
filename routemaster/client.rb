@@ -30,9 +30,9 @@ module Routemaster
         end
       end
 
-      def created(topic, callback, timestamp = nil, t: nil)
+      def created(topic, callback, timestamp = nil, t: nil, async: false)
         _warn_timestamp_deprecation(timestamp)
-        _send_event('create', topic, callback, t: t || timestamp)
+        _send_event('create', topic, callback, t: t || timestamp, async: async)
       end
 
       def created_async(topic, callback, timestamp = nil, t: nil)
@@ -41,9 +41,9 @@ module Routemaster
         _send_event('create', topic, callback, t: t || timestamp, async: true)
       end
 
-      def updated(topic, callback, timestamp = nil, t: nil)
+      def updated(topic, callback, timestamp = nil, t: nil, async: false)
         _warn_timestamp_deprecation(timestamp)
-        _send_event('update', topic, callback, t: t || timestamp)
+        _send_event('update', topic, callback, t: t || timestamp, async: async)
       end
 
       def updated_async(topic, callback, timestamp = nil, t: nil)
@@ -52,10 +52,10 @@ module Routemaster
         _send_event('update', topic, callback, t: t || timestamp, async: true)
       end
 
-      def deleted(topic, callback, timestamp = nil, t: nil)
+      def deleted(topic, callback, timestamp = nil, t: nil, async: false)
         _warn_timestamp_deprecation(timestamp)
         _warn_async_deprecation
-        _send_event('delete', topic, callback, t: t || timestamp)
+        _send_event('delete', topic, callback, t: t || timestamp, async: async)
       end
 
       def deleted_async(topic, callback, timestamp = nil, t: nil)
@@ -64,9 +64,9 @@ module Routemaster
         _send_event('delete', topic, callback, t: t || timestamp, async: true)
       end
 
-      def noop(topic, callback, timestamp = nil, t: nil)
+      def noop(topic, callback, timestamp = nil, t: nil, async: false)
         _warn_timestamp_deprecation(timestamp)
-        _send_event('noop', topic, callback, t: t || timestamp)
+        _send_event('noop', topic, callback, t: t || timestamp, async: async)
       end
 
       def noop_async(topic, callback, timestamp = nil, t: nil)

@@ -61,7 +61,7 @@ describe Routemaster::Client do
   shared_examples 'an unconfigured async event sender' do
     let(:callback) { 'https://app.example.com/widgets/123' }
     let(:topic)    { 'widgets' }
-    let(:perform)  { subject.send(method, topic, callback) }
+    let(:perform)  { subject.send(method, topic, callback, **flags) }
     let(:http_status) { nil }
 
     it 'raises an error' do
@@ -72,7 +72,7 @@ describe Routemaster::Client do
   shared_examples 'an event sender' do
     let(:callback) { 'https://app.example.com/widgets/123' }
     let(:topic)    { 'widgets' }
-    let(:perform)  { subject.send(event, topic, callback) }
+    let(:perform)  { subject.send(event, topic, callback, **flags) }
     let(:http_status) { nil }
 
     before do
@@ -136,7 +136,7 @@ describe Routemaster::Client do
 
     context 'with explicit timestamp' do
       let(:timestamp) { (Time.now.to_f * 1e3).to_i }
-      let(:perform)   { subject.send(event, topic, callback, timestamp) }
+      let(:perform)   { subject.send(event, topic, callback, t: timestamp) }
 
       before do
         @stub = stub_request(:post, 'https://@bus.example.com/topics/widgets').
@@ -170,104 +170,86 @@ describe Routemaster::Client do
     end
   end
 
-  context "With no background worker specified" do
-    describe '#created' do
-      let(:event) { 'created' }
-      it_behaves_like 'an event sender'
+  context 'without a background worker specified' do
+    context 'with default flags' do
+      %w[created updated deleted noop].each do |m|
+        describe "##{m}" do
+          let(:event) { m.to_sym }
+          let(:flags) { {} }
+          it_behaves_like 'an event sender'
+        end
+      end
     end
 
-    describe '#created_async' do
-      let(:method) { 'created_async' }
-      it_behaves_like 'an unconfigured async event sender'
+    context 'with the :async flag' do
+      %w[created updated deleted noop].each do |m|
+        describe "##{m}" do
+          let(:method) { m }
+          let(:flags) { { async: true } }
+          it_behaves_like 'an unconfigured async event sender'
+        end
+      end
     end
 
-    describe '#updated' do
-      let(:event) { 'updated' }
-      it_behaves_like 'an event sender'
-    end
-
-    describe '#updated_async' do
-      let(:method) { 'updated_async' }
-      it_behaves_like 'an unconfigured async event sender'
-    end
-
-    describe '#deleted' do
-      let(:event) { 'deleted' }
-      it_behaves_like 'an event sender'
-    end
-
-    describe '#deleted_async' do
-      let(:method) { 'deleted_async' }
-      it_behaves_like 'an unconfigured async event sender'
-    end
-
-    describe '#noop' do
-      let(:event) { 'noop' }
-      it_behaves_like 'an event sender'
-    end
-
-    describe '#noop_async' do
-      let(:method) { 'noop_async' }
-      it_behaves_like 'an unconfigured async event sender'
+    describe 'deprecated *_async methods' do
+      %w[created updated deleted noop].each do |m|
+        describe "##{m}_async" do
+          let(:method) { "#{m}_async" }
+          let(:flags) { {} }
+          it_behaves_like 'an unconfigured async event sender'
+        end
+      end
     end
   end
 
- context "With the sidekiq back end" do
-   reset_sidekiq_config_between_tests!
-
-   before do
-     options[:async_backend] = Routemaster::Client::Backends::Sidekiq.configure do |config|
-       config.queue = :realtime
-       config.retry = true
-     end
-   end
-
-   around do |example|
-     Sidekiq::Testing.inline! do
-       example.run
-     end
-   end
-
-   describe '#created' do
-     let(:event) { 'created' }
-     it_behaves_like 'an event sender'
-   end
-
-    describe '#created_async' do
-      let(:event) { 'created_async' }
-      it_behaves_like 'an event sender'
+  context 'with the sidekiq async back end configured' do
+    reset_sidekiq_config_between_tests!
+ 
+    before do
+      options[:async_backend] = Routemaster::Client::Backends::Sidekiq.configure do |config|
+        config.queue = :realtime
+        config.retry = true
+      end
     end
-
-   describe '#updated' do
-     let(:event) { 'updated' }
-     it_behaves_like 'an event sender'
-   end
-
-   describe '#updated_async' do
-     let(:event) { 'updated_async' }
-     it_behaves_like 'an event sender'
-   end
-
-   describe '#deleted' do
-     let(:event) { 'deleted' }
-     it_behaves_like 'an event sender'
-   end
-
-   describe '#deleted_async' do
-     let(:event) { 'deleted_async' }
-     it_behaves_like 'an event sender'
-   end
-
-   describe '#noop' do
-     let(:event) { 'noop' }
-     it_behaves_like 'an event sender'
-   end
-
-   describe '#noop_async' do
-     let(:event) { 'noop_async' }
-     it_behaves_like 'an event sender'
-   end
- end
+ 
+    around do |example|
+      Sidekiq::Testing.inline! do
+        example.run
+      end
+    end
+ 
+    context 'with default options' do
+      let(:flags) { {} }
+ 
+      %w[created updated deleted noop].each do |m|
+        describe "##{m}" do
+          let(:event) { m }
+          it_behaves_like 'an event sender'
+        end
+      end
+    end
+ 
+    context 'with :async option' do
+      let(:flags) { { async: true } }
+ 
+      %w[created updated deleted noop].each do |m|
+        describe "##{m}" do
+          let(:event) { m }
+          it_behaves_like 'an event sender'
+        end
+      end
+    end
+ 
+    describe 'deprecated *_async methods' do
+      %w[created updated deleted noop].each do |m|
+        describe "##{m}_async" do
+          let(:event) { "#{m}_async" }
+          let(:flags) { {} }
+          it_behaves_like 'an event sender'
+        end
+      end
+    end
+  end
 
   describe '#subscribe' do
     let(:perform) { subject.subscribe(subscribe_options) }
