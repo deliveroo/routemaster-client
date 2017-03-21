@@ -26,18 +26,9 @@ Or install it yourself as:
 ```ruby
 require 'routemaster/client'
 Routemaster::Client.configure do |config|
-  config.url = 'https://bs.example.com'
-  config.uuid = 'demo'
-end
-```
-
-You can also specify a timeout value in seconds if you like with the ```timeout``` option.
-
-```ruby
-Routemaster::Client.configure do |config|
-  config.url = 'https://bs.example.com'
-  config.uuid = 'demo'
-  config.timeout = 2
+  config.url = 'https://bus.example.com'
+  config.uuid = 'demo' # HTTP Basic token used to talk to the bus
+  config.timeout = 2 # in seconds
 end
 ```
 
@@ -45,9 +36,7 @@ If you are using Sidekiq in your project, you can specify the usage of a Sidekiq
 
 ```ruby
 Routemaster::Client.configure do |config|
-  config.url = 'https://bs.example.com'
-  config.uuid = 'demo'
-  config.timeout = 2
+  # ...
   config.async_backend = Routemaster::Client::Backends::Sidekiq.configure do |sidekiq|
   	sidekiq.queue = :realtime
   	sidekiq.retry = false
@@ -74,18 +63,15 @@ A timestamp argument may be passed (it will be set by the bus automatically
 otherwise); it must be an integer number of milliseconds since the UNIX Epoch:
 
 ```ruby
-Routemaster::Client.created('widgets', 'https://app.example.com/widgets/1', 1473080555409)
+Routemaster::Client.created('widgets', 'https://app.example.com/widgets/1', t: 1473080555409)
 ```
 
-**Async**
-You can also push events asynchronously if you have an async backend defined, for each
-event method there is a corresponding `event_async` method. eg
+You can also push events asynchronously if you have configured a backend that
+supports this (otherwise an error will be raised):
+
 ```ruby
-   Routemaster::Client.updated_async('widgets', 'https://app.example.com/widgets/2')
+Routemaster::Client.updated('widgets', 'https://app.example.com/widgets/2', async: true)
 ```
-
-You cannot use these methods without defining an async backend, if you try then an error will
-be raised.
 
 **Subscribe** to be notified about `widgets` and `kitten` at most 60 seconds after
 events, in batches of at most 500 events, to a given callback URL:
