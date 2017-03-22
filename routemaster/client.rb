@@ -30,36 +30,48 @@ module Routemaster
         end
       end
 
-      def created(topic, callback, timestamp = nil)
-        _send_event('create', topic, callback, timestamp)
+      def created(topic, callback, timestamp = nil, t: nil, async: false)
+        _warn_timestamp_deprecation(timestamp)
+        _send_event('create', topic, callback, t: t || timestamp, async: async)
       end
 
-      def created_async(topic, callback, timestamp = nil)
-        _send_event('create', topic, callback, timestamp, async: true)
+      def created_async(topic, callback, timestamp = nil, t: nil)
+        _warn_timestamp_deprecation(timestamp)
+        _warn_async_deprecation
+        _send_event('create', topic, callback, t: t || timestamp, async: true)
       end
 
-      def updated(topic, callback, timestamp = nil)
-        _send_event('update', topic, callback, timestamp)
+      def updated(topic, callback, timestamp = nil, t: nil, async: false)
+        _warn_timestamp_deprecation(timestamp)
+        _send_event('update', topic, callback, t: t || timestamp, async: async)
       end
 
-      def updated_async(topic, callback, timestamp = nil)
-        _send_event('update', topic, callback, timestamp, async: true)
+      def updated_async(topic, callback, timestamp = nil, t: nil)
+        _warn_timestamp_deprecation(timestamp)
+        _warn_async_deprecation
+        _send_event('update', topic, callback, t: t || timestamp, async: true)
       end
 
-      def deleted(topic, callback, timestamp = nil)
-        _send_event('delete', topic, callback, timestamp)
+      def deleted(topic, callback, timestamp = nil, t: nil, async: false)
+        _warn_timestamp_deprecation(timestamp)
+        _send_event('delete', topic, callback, t: t || timestamp, async: async)
       end
 
-      def deleted_async(topic, callback, timestamp = nil)
-        _send_event('delete', topic, callback, timestamp, async: true)
+      def deleted_async(topic, callback, timestamp = nil, t: nil)
+        _warn_timestamp_deprecation(timestamp)
+        _warn_async_deprecation
+        _send_event('delete', topic, callback, t: t || timestamp, async: true)
       end
 
-      def noop(topic, callback, timestamp = nil)
-        _send_event('noop', topic, callback, timestamp)
+      def noop(topic, callback, timestamp = nil, t: nil, async: false)
+        _warn_timestamp_deprecation(timestamp)
+        _send_event('noop', topic, callback, t: t || timestamp, async: async)
       end
 
-      def noop_async(topic, callback, timestamp = nil)
-        _send_event('noop', topic, callback, timestamp, async: true)
+      def noop_async(topic, callback, timestamp = nil, t: nil)
+        _warn_timestamp_deprecation(timestamp)
+        _warn_async_deprecation
+        _send_event('noop', topic, callback, t: t || timestamp, async: true)
       end
 
       def subscribe(topics:, callback:, **options)
@@ -165,19 +177,30 @@ module Routemaster
         end
       end
 
-      def _send_event(event, topic, callback, timestamp = nil, async: false)
+      def _send_event(event, topic, callback, t: nil, async: false)
         _assert_valid_url!(callback)
         _assert_valid_topic!(topic)
-        _assert_valid_timestamp!(timestamp) if timestamp
+        _assert_valid_timestamp!(t) if t
 
         backend = async ? async_backend : _synchronous_backend
-        backend.send_event(event, topic, callback, timestamp)
+        backend.send_event(event, topic, callback, t: t)
       end
 
       def _check_pulse!
         _conn.get('/pulse').tap do |response|
           raise 'cannot connect to bus' unless response.success?
         end
+      end
+
+      def _warn_async_deprecation
+        warn 'routemaster-client: The _*_async event-sending methods are deprecated. Use async: true instead.'
+        warn "(in #{caller(2,1).first})"
+      end
+
+      def _warn_timestamp_deprecation(value)
+        return if value.nil?
+        warn 'routemaster-client: Passing timestamps as positional parameters is deprecated. Use the t: key instead.'
+        warn "(in #{caller(2,1).first})"
       end
 
       private :async_backend, :lazy

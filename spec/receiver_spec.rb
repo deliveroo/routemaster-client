@@ -77,11 +77,6 @@ describe Routemaster::Receiver do
       expect(handler).to receive(:on_events).exactly(3).times
       3.times { perform }
     end
-    
-    it 'warns about deprecation' do
-      expect_any_instance_of(described_class).to receive(:warn).with(/deprecated/)
-      app
-    end
   end
 
   context 'with a listener' do
