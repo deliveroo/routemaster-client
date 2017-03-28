@@ -73,6 +73,14 @@ supports this (otherwise an error will be raised):
 Routemaster::Client.updated('widgets', 'https://app.example.com/widgets/2', async: true)
 ```
 
+A data payload can be sent alongside the event. It is strongly discouraged to do
+this except extrame circumstances (particularly as schema migrations become very
+painful):
+
+```ruby
+Routemaster::Client.created('cats', 'https://app.example.com/cats/42', data: { 'color' => 'teal' })
+```
+
 **Subscribe** to be notified about `widgets` and `kitten` at most 60 seconds after
 events, in batches of at most 500 events, to a given callback URL:
 

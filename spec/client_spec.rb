@@ -168,6 +168,34 @@ describe Routemaster::Client do
         end
       end
     end
+
+    context 'with a data payload' do
+      let(:timestamp) { (Time.now.to_f * 1e3).to_i }
+      let(:perform)   { subject.send(event, topic, callback, data: data) }
+      let(:data) {{ 'foo' => 'bar' }}
+
+      before do
+        @stub = stub_request(:post, 'https://@bus.example.com/topics/widgets').
+          with(
+            body: hash_including(data: data),
+            basic_auth: [options[:uuid], 'x'],
+          ).
+          to_return(status: 200)
+      end
+
+      it 'sends the event' do
+        perform
+        expect(@stub).to have_been_requested
+      end
+
+      context 'with non-serializable data' do
+        let(:data) { [:foo, 'bar'] }
+
+        it 'fails' do
+          expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
+        end
+      end
+    end
   end
 
   context 'without a background worker specified' do
