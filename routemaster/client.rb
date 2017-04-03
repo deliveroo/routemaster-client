@@ -5,6 +5,7 @@ require 'routemaster/client/version'
 require 'routemaster/client/errors'
 require 'routemaster/client/assertion_helpers'
 require 'routemaster/topic'
+require 'routemaster/subscription'
 require 'uri'
 require 'json'
 require 'faraday'
@@ -124,6 +125,20 @@ module Routemaster
 
         Oj.load(response.body).map do |raw_topic|
           Topic.new raw_topic
+        end
+      end
+
+      def monitor_subscriptions
+        response = _conn.get('/subscriptions') do |r|
+          r.headers['Content-Type'] = 'application/json'
+        end
+
+        unless response.success?
+          raise 'failed to connect to /subscriptions'
+        end
+
+        Oj.load(response.body).map do |raw_subscription|
+          Subscription.new raw_subscription
         end
       end
 

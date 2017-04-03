@@ -232,23 +232,23 @@ describe Routemaster::Client do
 
   context 'with the sidekiq async back end configured' do
     reset_sidekiq_config_between_tests!
- 
+
     before do
       options[:async_backend] = Routemaster::Client::Backends::Sidekiq.configure do |config|
         config.queue = :realtime
         config.retry = true
       end
     end
- 
+
     around do |example|
       Sidekiq::Testing.inline! do
         example.run
       end
     end
- 
+
     context 'with default options' do
       let(:flags) { {} }
- 
+
       %w[created updated deleted noop].each do |m|
         describe "##{m}" do
           let(:event) { m }
@@ -256,10 +256,10 @@ describe Routemaster::Client do
         end
       end
     end
- 
+
     context 'with :async option' do
       let(:flags) { { async: true } }
- 
+
       %w[created updated deleted noop].each do |m|
         describe "##{m}" do
           let(:event) { m }
@@ -267,7 +267,7 @@ describe Routemaster::Client do
         end
       end
     end
- 
+
     describe 'deprecated *_async methods' do
       %w[created updated deleted noop].each do |m|
         describe "##{m}_async" do
@@ -408,53 +408,82 @@ describe Routemaster::Client do
   end
 
 
-  describe '#monitor_topics' do
+  context 'monitoring methods' do
+    let(:default_headers) { { 'Content-Type' => 'application/json' } }
 
-    let(:perform) { subject.monitor_topics }
-    let(:expected_result) do
-      [
-        {
-          name: 'widgets',
-          publisher: 'demo',
-          events: 12589
-        }
-      ]
-    end
-
-    context 'the connection to the bus is successful' do
+    shared_context 'successful connection to bus' do
       before do
-        @stub = stub_request(:get, 'https://bus.example.com/topics').
-          with(basic_auth: [options[:uuid], 'x']).
-          with { |r|
-          r.headers['Content-Type'] == 'application/json'
-        }.to_return {
-          { status: 200, body: expected_result.to_json }
-        }
-      end
-
-      it 'expects a collection of topics' do
-        expect(perform.map(&:attributes)).to eql(expected_result)
+        @stub = stub_request(:get, url)
+          .with(basic_auth: [options[:uuid], 'x'], headers: default_headers)
+          .to_return(status: 200, body: expected_result.to_json)
       end
     end
 
-    context 'the connection to the bus errors' do
+    shared_context 'failing connection to bus' do
       before do
-        @stub = stub_request(:get, 'https://bus.example.com/topics').
-          with(basic_auth: [options[:uuid], 'x']).
-          with { |r|
-          r.headers['Content-Type'] == 'application/json'
-        }.to_return(status: 500)
+        @stub = stub_request(:get, url)
+          .with(basic_auth: [options[:uuid], 'x'], headers: default_headers)
+          .to_return(status: 500)
+      end
+    end
+
+    describe '#monitor_topics' do
+      let(:url) { 'https://bus.example.com/topics' }
+      let(:perform) { subject.monitor_topics }
+      let(:expected_result) do
+        [
+          {
+            name: 'widgets',
+            publisher: 'demo',
+            events: 12589
+          }
+        ]
       end
 
-      it 'expects a collection of topics' do
-        expect { perform }.to raise_error(RuntimeError)
+      context 'the connection to the bus is successful' do
+        include_context 'successful connection to bus'
+
+        it 'expects a collection of topics' do
+          expect(perform.map(&:attributes)).to eql(expected_result)
+        end
+      end
+
+      context 'the connection to the bus errors' do
+        include_context 'failing connection to bus'
+
+        it 'expects a collection of topics' do
+          expect { perform }.to raise_error(RuntimeError)
+        end
+      end
+    end
+
+    describe '#monitor_subscriptions' do
+      let(:url) { 'https://bus.example.com/subscriptions' }
+      let(:perform) { subject.monitor_subscriptions }
+      let(:expected_result) do
+        [{
+          subscriber: 'bob',
+          callback:   'https://app.example.com/events',
+          topics:     ['widgets', 'kitten'],
+          events:     { sent: 1, queued: 100, oldest: 10_000 }
+        }]
+      end
+
+      context 'the connection to the bus is successful' do
+        include_context 'successful connection to bus'
+
+        it 'expects a collection of subscriptions' do
+          expect(perform.map(&:attributes)).to eql(expected_result)
+        end
+      end
+
+      context 'the connection to the bus errors' do
+        include_context 'failing connection to bus'
+
+        it 'expects a collection of topics' do
+          expect { perform }.to raise_error(RuntimeError)
+        end
       end
     end
   end
-
-  describe '#monitor_subscriptions' do
-    it 'passes'
-  end
-
 end
-
