@@ -30,7 +30,8 @@ module Routemaster
             r.headers['Content-Type'] = 'application/json'
             r.body = Oj.dump(payload, mode: :strict)
           end
-          fail "event rejected (#{response.status})" unless response.success?
+
+          raise ConnectionError, "event rejected (status: #{response.status})" unless response.success?
 
           # Any issues would have caused an exception to be thrown
           true
@@ -42,9 +43,7 @@ module Routemaster
             r.body = Oj.dump(_stringify_keys options)
           end
 
-          unless response.success?
-            raise 'subscribe rejected'
-          end
+          raise ConnectionError, "subscribe rejected (status: #{response.status})" unless response.success?
         end
 
         private
