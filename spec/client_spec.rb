@@ -121,7 +121,7 @@ describe Routemaster::Client do
       let(:http_status) { 500 }
 
       it 'raises an exception' do
-        expect { perform }.to raise_error(RuntimeError)
+        expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'event rejected (status: 500)')
       end
     end
 
@@ -232,23 +232,23 @@ describe Routemaster::Client do
 
   context 'with the sidekiq async back end configured' do
     reset_sidekiq_config_between_tests!
- 
+
     before do
       options[:async_backend] = Routemaster::Client::Backends::Sidekiq.configure do |config|
         config.queue = :realtime
         config.retry = true
       end
     end
- 
+
     around do |example|
       Sidekiq::Testing.inline! do
         example.run
       end
     end
- 
+
     context 'with default options' do
       let(:flags) { {} }
- 
+
       %w[created updated deleted noop].each do |m|
         describe "##{m}" do
           let(:event) { m }
@@ -256,10 +256,10 @@ describe Routemaster::Client do
         end
       end
     end
- 
+
     context 'with :async option' do
       let(:flags) { { async: true } }
- 
+
       %w[created updated deleted noop].each do |m|
         describe "##{m}" do
           let(:event) { m }
@@ -267,7 +267,7 @@ describe Routemaster::Client do
         end
       end
     end
- 
+
     describe 'deprecated *_async methods' do
       %w[created updated deleted noop].each do |m|
         describe "##{m}_async" do
@@ -324,7 +324,7 @@ describe Routemaster::Client do
 
     it 'fails on HTTP error' do
       @stub.to_return(status: 500)
-      expect { perform }.to raise_error(RuntimeError, 'subscribe rejected')
+      expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'subscribe rejected (status: 500)')
     end
 
     it 'accepts a uuid' do
@@ -356,7 +356,7 @@ describe Routemaster::Client do
 
     it 'fails on HTTP error' do
       @stub.to_return(status: 500)
-      expect { perform }.to raise_error(RuntimeError)
+      expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'unsubscribe rejected (status: 500)')
     end
   end
 
@@ -376,7 +376,7 @@ describe Routemaster::Client do
 
     it 'fails on HTTP error' do
       @stub.to_return(status: 500)
-      expect { perform }.to raise_error(RuntimeError)
+      expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'unsubscribe all rejected (status: 500)')
     end
   end
 
@@ -403,7 +403,7 @@ describe Routemaster::Client do
 
     it 'fails on HTTP error' do
       @stub.to_return(status: 500)
-      expect { perform }.to raise_error(RuntimeError)
+      expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'failed to delete topic (status: 500)')
     end
   end
 
@@ -447,7 +447,7 @@ describe Routemaster::Client do
       end
 
       it 'expects a collection of topics' do
-        expect { perform }.to raise_error(RuntimeError)
+        expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'failed to connect to /topics (status: 500)')
       end
     end
   end
@@ -457,4 +457,3 @@ describe Routemaster::Client do
   end
 
 end
-
