@@ -451,34 +451,34 @@ describe Routemaster::Client do
         expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'failed to connect to /topics (status: 500)')
       end
     end
+  end
 
-    describe '#reset_connection' do
+  describe '#reset_connection' do
 
-      context 'can reset class vars to change params' do
+    context 'can reset class vars to change params' do
 
-        let(:instance_uuid) { SecureRandom.uuid }
+      let(:instance_uuid) { SecureRandom.uuid }
 
-        let(:options) {{
-          url:        'https://@bus.example.com',
-          uuid:       instance_uuid,
-          verify_ssl: false,
-          lazy: true
-        }}
+      let(:options) {{
+        url:        'https://@bus.example.com',
+        uuid:       instance_uuid,
+        verify_ssl: false,
+        lazy: true
+      }}
 
-        before do
-          Routemaster::Client::Connection.reset_connection
-          @stub = stub_request(:get, 'https://@bus.example.com/topics').with({basic_auth: [instance_uuid, 'x']})
-            .to_return(status: 200, body: [{ name: "topic.name", publisher: "topic.publisher", events: "topic.get_count" }].to_json)
-        end
+      before do
+        Routemaster::Client::Connection.reset_connection
+        @stub = stub_request(:get, 'https://@bus.example.com/topics').with({basic_auth: [instance_uuid, 'x']})
+          .to_return(status: 200, body: [{ name: "topic.name", publisher: "topic.publisher", events: "topic.get_count" }].to_json)
+      end
 
-        after do
-          Routemaster::Client::Connection.reset_connection
-        end
+      after do
+        Routemaster::Client::Connection.reset_connection
+      end
 
-        it 'connects with new params' do
-          subject.monitor_topics
-          expect(@stub).to have_been_requested
-        end
+      it 'connects with new params' do
+        subject.monitor_topics
+        expect(@stub).to have_been_requested
       end
     end
   end
