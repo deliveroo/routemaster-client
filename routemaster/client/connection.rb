@@ -46,6 +46,10 @@ module Routemaster
           raise ConnectionError, "subscribe rejected (status: #{response.status})" unless response.success?
         end
 
+        def reset_connection
+          @_conn = nil
+        end
+
         private
 
         def_delegators :'Routemaster::Client::Configuration', :url, :timeout, :uuid, :verify_ssl
