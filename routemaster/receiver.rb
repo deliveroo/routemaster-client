@@ -45,7 +45,7 @@ module Routemaster
     def _valid_auth?(env)
       p "#{self.class} - #{@uuid}"
       p "#{self.class} - #{env['HTTP_AUTHORIZATION']}"
-      p "#{self.class} - #{Base64.decode64 env['HTTP_AUTHORIZATION']}"
+      p "#{self.class} - #{Base64.decode64 env['HTTP_AUTHORIZATION'].to_s}"
 
       Base64.
         decode64(env['HTTP_AUTHORIZATION'].gsub(/^Basic /, '')).
