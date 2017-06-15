@@ -8,5 +8,6 @@ module Routemaster
     class MissingAsyncBackendError   < Error; end
     class MissingAttributeError      < ConfigurationError; end
     class InvalidAttributeError      < ConfigurationError; end
+    class ConnectionError            < Error; end
   end
 end
