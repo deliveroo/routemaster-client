@@ -69,7 +69,7 @@ describe Routemaster::Client do
     end
   end
 
-  shared_examples 'an event sender' do
+  shared_examples 'an event sender' do |o|
     let(:callback) { 'https://app.example.com/widgets/123' }
     let(:topic)    { 'widgets' }
     let(:perform)  { subject.send(method, topic, callback, **flags) }
@@ -104,6 +104,16 @@ describe Routemaster::Client do
           expect(data['url']).to eq callback
         end
         perform
+      end
+
+      if o && o[:set_timestamp]
+        it 'sets a timestamp' do
+          @stub.with do |req|
+            data = JSON.parse(req.body)
+            expect(data['timestamp']).to be_a_kind_of(Integer)
+          end
+          perform
+        end
       end
 
       it 'fails with a bad callback URL' do
@@ -275,7 +285,7 @@ describe Routemaster::Client do
         describe "##{m}" do
           let(:method) { m }
           let(:event) { m.sub(/d$/, '') }
-          it_behaves_like 'an event sender'
+          it_behaves_like 'an event sender', set_timestamp: true
         end
       end
     end
