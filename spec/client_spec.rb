@@ -72,7 +72,7 @@ describe Routemaster::Client do
   shared_examples 'an event sender' do
     let(:callback) { 'https://app.example.com/widgets/123' }
     let(:topic)    { 'widgets' }
-    let(:perform)  { subject.send(event, topic, callback, **flags) }
+    let(:perform)  { subject.send(method, topic, callback, **flags) }
     let(:http_status) { nil }
 
     before do
@@ -93,6 +93,15 @@ describe Routemaster::Client do
       it 'sends a JSON payload' do
         @stub.with do |req|
           expect(req.headers['Content-Type']).to eq('application/json')
+        end
+        perform
+      end
+
+      it 'sends the url and type' do
+        @stub.with do |req|
+          data = JSON.parse(req.body)
+          expect(data['type']).to eq event
+          expect(data['url']).to eq callback
         end
         perform
       end
@@ -136,7 +145,7 @@ describe Routemaster::Client do
 
     context 'with explicit timestamp' do
       let(:timestamp) { (Time.now.to_f * 1e3).to_i }
-      let(:perform)   { subject.send(event, topic, callback, t: timestamp) }
+      let(:perform)   { subject.send(method, topic, callback, t: timestamp) }
 
       before do
         @stub = stub_request(:post, 'https://@bus.example.com/topics/widgets').
@@ -171,7 +180,7 @@ describe Routemaster::Client do
 
     context 'with a data payload' do
       let(:timestamp) { (Time.now.to_f * 1e3).to_i }
-      let(:perform)   { subject.send(event, topic, callback, data: data) }
+      let(:perform)   { subject.send(method, topic, callback, data: data) }
       let(:data) {{ 'foo' => 'bar' }}
 
       before do
@@ -202,7 +211,8 @@ describe Routemaster::Client do
     context 'with default flags' do
       %w[created updated deleted noop].each do |m|
         describe "##{m}" do
-          let(:event) { m.to_sym }
+          let(:method) { m.to_sym }
+          let(:event) { m.sub(/d$/, '') }
           let(:flags) { {} }
           it_behaves_like 'an event sender'
         end
@@ -251,7 +261,8 @@ describe Routemaster::Client do
  
       %w[created updated deleted noop].each do |m|
         describe "##{m}" do
-          let(:event) { m }
+          let(:method) { m }
+          let(:event) { m.sub(/d$/, '') }
           it_behaves_like 'an event sender'
         end
       end
@@ -262,7 +273,8 @@ describe Routemaster::Client do
  
       %w[created updated deleted noop].each do |m|
         describe "##{m}" do
-          let(:event) { m }
+          let(:method) { m }
+          let(:event) { m.sub(/d$/, '') }
           it_behaves_like 'an event sender'
         end
       end
@@ -271,7 +283,8 @@ describe Routemaster::Client do
     describe 'deprecated *_async methods' do
       %w[created updated deleted noop].each do |m|
         describe "##{m}_async" do
-          let(:event) { "#{m}_async" }
+          let(:method) { "#{m}_async" }
+          let(:event) { m.sub(/d$/, '') }
           let(:flags) { {} }
           it_behaves_like 'an event sender'
         end
