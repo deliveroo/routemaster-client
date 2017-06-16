@@ -69,7 +69,7 @@ describe Routemaster::Client do
     end
   end
 
-  shared_examples 'an event sender' do |o|
+  shared_examples 'an event sender' do |spec_options|
     let(:callback) { 'https://app.example.com/widgets/123' }
     let(:topic)    { 'widgets' }
     let(:perform)  { subject.send(method, topic, callback, **flags) }
@@ -106,7 +106,7 @@ describe Routemaster::Client do
         perform
       end
 
-      if o && o[:set_timestamp]
+      if spec_options && spec_options[:set_timestamp]
         it 'sets a timestamp' do
           @stub.with do |req|
             data = JSON.parse(req.body)
