@@ -181,6 +181,7 @@ module Routemaster
         _assert_valid_timestamp!(t) if t
         _assert_valid_data(data) if data
 
+        t ||= _now if async
         backend = async ? async_backend : _synchronous_backend
         backend.send_event(event, topic, callback, t: t, data: data)
       end
@@ -201,6 +202,11 @@ module Routemaster
         warn 'routemaster-client: Passing timestamps as positional parameters is deprecated. Use the t: key instead.'
         warn "(in #{caller(2,1).first})"
       end
+
+      def _now
+        (Time.now.to_f * 1e3).to_i
+      end
+
 
       private :async_backend, :lazy
     end
