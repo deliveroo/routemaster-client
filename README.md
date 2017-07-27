@@ -130,23 +130,28 @@ Routemaster bus.
 
 ### Commands
 
-    rtm token add [options] SERVICE TOKEN
+```
+rtm token add [options] SERVICE TOKEN
+```
 
 Adds `TOKEN` to the list of API tokens permitted to use the bus API. `SERVICE`
 is a human-readable name for this token.
 
-
-    rtm token del [options] TOKEN
+```
+rtm token del [options] TOKEN
+```
 
 Removes `TOKEN` from permitted tokens if it exists.
 
-
-    rtm token list [options]
+```
+rtm token list [options]
+```
 
 Lists currently permitted API tokens.
 
-
-    rtm sub add [options] -c|--callback URL -o|--topics TOPICS [--latency MS] [--max COUNT]
+```
+rtm sub add [options] -c|--callback URL -o|--topics TOPICS [--latency MS] [--max COUNT]
+```
 
 Adds (or updates) a subscription. Note that the `TOKEN` passed in `option` must be
 that of the subscriber, not a root token.
@@ -158,15 +163,17 @@ that of the subscriber, not a root token.
   how long to buffer events). 
 - `COUNT`, if specified, is the maximum number of events in a delivered batch.
 
-
-    rtm sub del [options] [-o|--topics TOPICS]
+```
+rtm sub del [options] [-o|--topics TOPICS]
+```
 
 Updates or removes a subscription. Note that the `TOKEN` passed in `option` must
 be that of the subscriber, not a root token.  If no `TOPICS` are specified, the
 subscription is entirely removed.
 
-
-    rtm pub [options] EVENT TOPIC URL
+```
+rtm pub [options] EVENT TOPIC URL
+```
 
 Publishes an event to the bus.  Note that the `TOKEN` passed in `option` must
 be that of the subscriber, not a root token. `EVENT` must be one of `created`,
@@ -176,12 +183,16 @@ be a valid HTTPS URL.
 
 ### Global options
 
-    -b|--bus DOMAIN|IP|@NAME
+```
+-b|--bus DOMAIN|IP|@NAME
+```
 
 The domain name of IP address of the bus to interact with, or a reference
 (`NAME`) to global configuration.
 
-    -t|--token TOKEN
+```
+-t|--token TOKEN
+```
 
 A root API token to use when querying the bus.
 
@@ -189,10 +200,12 @@ A root API token to use when querying the bus.
 `rtm` will load a configuration file in Yaml format (`.rtmrc` or `~/.rtmrc`).
 Example:
 
-    # .rtmrc
-    production:
-      bus:    prod.bus.example.com
-      token:  2bf959d1-04fb-4912-8450-ab646888d476
+```
+# .rtmrc
+production:
+  bus:    prod.bus.example.com
+  token:  2bf959d1-04fb-4912-8450-ab646888d476
+```
 
 With this configuration, `rtm token list -b @production` will list API tokens
 for the bus at the domain specified in the config.
