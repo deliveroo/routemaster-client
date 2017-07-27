@@ -1,25 +1,20 @@
 ## routemaster-client [![Version](https://badge.fury.io/rb/routemaster-client.svg)](https://rubygems.org/gems/routemaster-client) [![Build](https://travis-ci.org/deliveroo/routemaster-client.svg?branch=master)](https://travis-ci.org/deliveroo/routemaster-client) [![Code Climate](https://codeclimate.com/github/deliveroo/routemaster-client/badges/gpa.svg)](https://codeclimate.com/github/deliveroo/routemaster-client) [![Test Coverage](https://codeclimate.com/github/deliveroo/routemaster-client/badges/coverage.svg)](https://codeclimate.com/github/deliveroo/routemaster-client/coverage) [![Docs](http://img.shields.io/badge/API%20docs-rubydoc.info-blue.svg)](http://rubydoc.info/github/deliveroo/routemaster-client/frames/file/README.md)
 
-A Ruby API for the [Routemaster](https://github.com/deliveroo/routemaster) event
-bus.
+A Ruby API and CLI for the
+[Routemaster](https://github.com/deliveroo/routemaster) event bus.
 
+[Installation](#installation) | [Library usage](#library-usage) | [CLI usage](#cli-usage)
 
 
 ## Installation
 
+    gem install routemaster-client
+
+## Library usage
+
 Add this line to your application's Gemfile:
 
     gem 'routemaster-client'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install routemaster-client
-
-## Usage
 
 **Configure** your client:
 
@@ -127,6 +122,94 @@ Routemaster::Client.monitor_subscriptions
 #     events:     { sent: 21_450, queued: 498, oldest: 59_603 }
 #  } ... ]
 ```
+
+## CLI usage
+
+This gem includes the `rtm` binary, which can be used to interact with a
+Routemaster bus.
+
+### Commands
+
+```
+rtm token add [options] SERVICE TOKEN
+```
+
+Adds `TOKEN` to the list of API tokens permitted to use the bus API. `SERVICE`
+is a human-readable name for this token.
+
+```
+rtm token del [options] TOKEN
+```
+
+Removes `TOKEN` from permitted tokens if it exists.
+
+```
+rtm token list [options]
+```
+
+Lists currently permitted API tokens.
+
+```
+rtm sub add [options] -c|--callback URL -o|--topics TOPICS [--latency MS] [--max COUNT]
+```
+
+Adds (or updates) a subscription. Note that the `TOKEN` passed in `option` must be
+that of the subscriber, not a root token.
+
+- `URL` must be HTTPS and include an authentication username (used by the bus
+  when delivering events).
+- `TOPICS` is a comma-separated list of topic names.
+- `MS`, if specified, is the target delivery latency for this subscriber (ie.
+  how long to buffer events). 
+- `COUNT`, if specified, is the maximum number of events in a delivered batch.
+
+```
+rtm sub del [options] [-o|--topics TOPICS]
+```
+
+Updates or removes a subscription. Note that the `TOKEN` passed in `option` must
+be that of the subscriber, not a root token.  If no `TOPICS` are specified, the
+subscription is entirely removed.
+
+```
+rtm pub [options] EVENT TOPIC URL
+```
+
+Publishes an event to the bus.  Note that the `TOKEN` passed in `option` must
+be that of the subscriber, not a root token. `EVENT` must be one of `created`,
+`updated`, `deleted`, or `noop`. `TOPIC` must be a valid topic name. `URL` must
+be a valid HTTPS URL.
+
+
+### Global options
+
+```
+-b|--bus DOMAIN|IP|@NAME
+```
+
+The domain name of IP address of the bus to interact with, or a reference
+(`NAME`) to global configuration.
+
+```
+-t|--token TOKEN
+```
+
+A root API token to use when querying the bus.
+
+
+`rtm` will load a configuration file in Yaml format (`.rtmrc` or `~/.rtmrc`).
+Example:
+
+```
+# .rtmrc
+production:
+  bus:    prod.bus.example.com
+  token:  2bf959d1-04fb-4912-8450-ab646888d476
+```
+
+With this configuration, `rtm token list -b @production` will list API tokens
+for the bus at the domain specified in the config.
+
 
 ## Contributing
 
