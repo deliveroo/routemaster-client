@@ -238,16 +238,6 @@ describe Routemaster::Client do
         end
       end
     end
-
-    describe 'deprecated *_async methods' do
-      %w[created updated deleted noop].each do |m|
-        describe "##{m}_async" do
-          let(:method) { "#{m}_async" }
-          let(:flags) { {} }
-          it_behaves_like 'an unconfigured async event sender'
-        end
-      end
-    end
   end
 
   context 'with the sidekiq async back end configured' do
@@ -286,17 +276,6 @@ describe Routemaster::Client do
           let(:method) { m }
           let(:event) { m.sub(/d$/, '') }
           it_behaves_like 'an event sender', set_timestamp: true
-        end
-      end
-    end
-
-    describe 'deprecated *_async methods' do
-      %w[created updated deleted noop].each do |m|
-        describe "##{m}_async" do
-          let(:method) { "#{m}_async" }
-          let(:event) { m.sub(/d$/, '') }
-          let(:flags) { {} }
-          it_behaves_like 'an event sender'
         end
       end
     end

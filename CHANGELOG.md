@@ -1,5 +1,10 @@
 # HEAD
 
+Features:
+
+- Removes deprecated `*_async` methods. Removes deprecated timestamps as
+  positional parameters.
+
 Bug fixes:
 
 - Always send a timestamp when sending asynchronously (#20)

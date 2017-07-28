@@ -25,48 +25,20 @@ module Routemaster
         end
       end
 
-      def created(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _send_event('create', topic, callback, t: t || timestamp, async: async, data: data)
+      def created(topic, callback, t: nil, async: false, data: nil)
+        _send_event('create', topic, callback, t: t, async: async, data: data)
       end
 
-      def created_async(topic, callback, timestamp = nil, t: nil, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _warn_async_deprecation
-        _send_event('create', topic, callback, t: t || timestamp, async: true, data: data)
+      def updated(topic, callback, t: nil, async: false, data: nil)
+        _send_event('update', topic, callback, t: t, async: async, data: data)
       end
 
-      def updated(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _send_event('update', topic, callback, t: t || timestamp, async: async, data: data)
+      def deleted(topic, callback, t: nil, async: false, data: nil)
+        _send_event('delete', topic, callback, t: t, async: async, data: data)
       end
 
-      def updated_async(topic, callback, timestamp = nil, t: nil, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _warn_async_deprecation
-        _send_event('update', topic, callback, t: t || timestamp, async: true, data: data)
-      end
-
-      def deleted(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _send_event('delete', topic, callback, t: t || timestamp, async: async, data: data)
-      end
-
-      def deleted_async(topic, callback, timestamp = nil, t: nil, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _warn_async_deprecation
-        _send_event('delete', topic, callback, t: t || timestamp, async: true, data: data)
-      end
-
-      def noop(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _send_event('noop', topic, callback, t: t || timestamp, async: async, data: data)
-      end
-
-      def noop_async(topic, callback, timestamp = nil, t: nil, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _warn_async_deprecation
-        _send_event('noop', topic, callback, t: t || timestamp, async: true, data: data)
+      def noop(topic, callback, t: nil, async: false, data: nil)
+        _send_event('noop', topic, callback, t: t, async: async, data: data)
       end
 
       def subscribe(topics:, callback:, **options)
@@ -185,17 +157,6 @@ module Routemaster
         _conn.get('/pulse').tap do |response|
           raise 'cannot connect to bus' unless response.success?
         end
-      end
-
-      def _warn_async_deprecation
-        warn 'routemaster-client: The _*_async event-sending methods are deprecated. Use async: true instead.'
-        warn "(in #{caller(2,1).first})"
-      end
-
-      def _warn_timestamp_deprecation(value)
-        return if value.nil?
-        warn 'routemaster-client: Passing timestamps as positional parameters is deprecated. Use the t: key instead.'
-        warn "(in #{caller(2,1).first})"
       end
 
       def _now
