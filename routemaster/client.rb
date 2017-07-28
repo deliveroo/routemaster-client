@@ -5,11 +5,6 @@ require 'routemaster/client/version'
 require 'routemaster/client/errors'
 require 'routemaster/client/assertion_helpers'
 require 'routemaster/topic'
-require 'uri'
-require 'json'
-require 'faraday'
-require 'typhoeus'
-require 'typhoeus/adapters/faraday'
 require 'oj'
 
 module Routemaster

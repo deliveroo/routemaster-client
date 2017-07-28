@@ -1,3 +1,6 @@
+require 'faraday'
+require 'typhoeus'
+require 'typhoeus/adapters/faraday'
 require 'routemaster/client/configuration'
 
 module Routemaster
