@@ -3,7 +3,7 @@
 Features:
 
 - Removes deprecated `*_async` methods. Removes deprecated timestamps as
-  positional parameters.
+  positional parameters (#23)
 
 Bug fixes:
 
