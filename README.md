@@ -150,7 +150,7 @@ rtm token list [options]
 Lists currently permitted API tokens.
 
 ```
-rtm sub add [options] -c|--callback URL -o|--topics TOPICS [--latency MS] [--max COUNT]
+rtm sub add [options] URL TOPICS... [--latency MS] [--batch-size COUNT]
 ```
 
 Adds (or updates) a subscription. Note that the `TOKEN` passed in `option` must be
@@ -158,18 +158,24 @@ that of the subscriber, not a root token.
 
 - `URL` must be HTTPS and include an authentication username (used by the bus
   when delivering events).
-- `TOPICS` is a comma-separated list of topic names.
+- `TOPICS` is a list of topic names.
 - `MS`, if specified, is the target delivery latency for this subscriber (ie.
   how long to buffer events). 
 - `COUNT`, if specified, is the maximum number of events in a delivered batch.
 
 ```
-rtm sub del [options] [-o|--topics TOPICS]
+rtm sub del [options] [TOPICS]
 ```
 
 Updates or removes a subscription. Note that the `TOKEN` passed in `option` must
 be that of the subscriber, not a root token.  If no `TOPICS` are specified, the
 subscription is entirely removed.
+
+```
+rtm sub list [options]
+```
+
+List existing subscriptions.
 
 ```
 rtm pub [options] EVENT TOPIC URL
@@ -184,17 +190,17 @@ be a valid HTTPS URL.
 ### Global options
 
 ```
--b|--bus DOMAIN|IP|@NAME
+-b|--bus DOMAIN|@NAME
 ```
 
-The domain name of IP address of the bus to interact with, or a reference
-(`NAME`) to global configuration.
+The domain names of the bus to interact with, or a reference (`NAME`) to global
+configuration.
 
 ```
 -t|--token TOKEN
 ```
 
-A root API token to use when querying the bus.
+An API token to use when querying the bus.
 
 
 `rtm` will load a configuration file in Yaml format (`.rtmrc` or `~/.rtmrc`).

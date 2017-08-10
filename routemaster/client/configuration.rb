@@ -19,6 +19,12 @@ module Routemaster
           _validate_all_options!
         end
 
+        def reset
+          %w[url uuid timeout async_backend lazy verify_ssl].each do |ivar|
+            remove_instance_variable :"@#{ivar}" if instance_variable_defined? :"@#{ivar}"
+          end
+        end
+
         private
 
         def _validate_all_options!
