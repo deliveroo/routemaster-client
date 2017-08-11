@@ -104,10 +104,7 @@ module Routemaster
       end
 
       def monitor_topics
-        response = _conn.get('/topics') do |r|
-          r.headers['Content-Type'] = 'application/json'
-        end
-
+        response = _conn.get('/topics')
         raise ConnectionError, "failed to connect to /topics (status: #{response.status})" unless response.success?
 
         Oj.load(response.body).map do |raw_topic|
@@ -116,10 +113,7 @@ module Routemaster
       end
 
       def monitor_subscriptions
-        response = _conn.get('/subscriptions') do |r|
-          r.headers['Content-Type'] = 'application/json'
-        end
-
+        response = _conn.get('/subscriptions')
         raise ConnectionError, "failed to list subscribers (status: #{response.status})" unless response.success?
 
         Oj.load(response.body).map do |raw_subscription|
