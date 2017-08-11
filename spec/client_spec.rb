@@ -451,35 +451,35 @@ describe Routemaster::Client do
       end
     end
 
-  describe '#monitor_topics' do
+    describe '#monitor_topics' do
       let(:url) { 'https://bus.example.com/topics' }
-    let(:perform) { subject.monitor_topics }
-    let(:expected_result) do
-      [
-        {
-          name: 'widgets',
-          publisher: 'demo',
-          events: 12589
-        }
-      ]
-    end
+      let(:perform) { subject.monitor_topics }
+      let(:expected_result) do
+        [
+          {
+            name: 'widgets',
+            publisher: 'demo',
+            events: 12589
+          }
+        ]
+      end
 
-    context 'the connection to the bus is successful' do
-        include_context 'successful connection to bus'
+      context 'the connection to the bus is successful' do
+          include_context 'successful connection to bus'
 
-      it 'expects a collection of topics' do
-        expect(perform.map(&:attributes)).to eql(expected_result)
+        it 'expects a collection of topics' do
+          expect(perform.map(&:attributes)).to eql(expected_result)
+        end
+      end
+
+      context 'the connection to the bus errors' do
+          include_context 'failing connection to bus'
+
+        it 'expects a collection of topics' do
+          expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'failed to connect to /topics (status: 500)')
+        end
       end
     end
-
-    context 'the connection to the bus errors' do
-        include_context 'failing connection to bus'
-
-      it 'expects a collection of topics' do
-        expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'failed to connect to /topics (status: 500)')
-      end
-    end
-  end
 
     describe '#monitor_subscriptions' do
       let(:url) { 'https://bus.example.com/subscriptions' }
@@ -512,33 +512,27 @@ describe Routemaster::Client do
   end
   
   describe '#reset_connection' do
+    context 'can reset class vars to change params' do
+      let(:instance_uuid) { SecureRandom.uuid }
+      let(:options) {{
+          url:        'https://@bus.example.com',
+          uuid:       instance_uuid,
+          verify_ssl: false,
+          lazy: true
+      }}
       
-      context 'can reset class vars to change params' do
-          
-          let(:instance_uuid) { SecureRandom.uuid }
-          
-          let(:options) {{
-              url:        'https://@bus.example.com',
-              uuid:       instance_uuid,
-              verify_ssl: false,
-              lazy: true
-          }}
-          
-          before do
-              Routemaster::Client::Connection.reset_connection
-              @stub = stub_request(:get, 'https://@bus.example.com/topics').with({basic_auth: [instance_uuid, 'x']})
-              .to_return(status: 200, body: [{ name: "topic.name", publisher: "topic.publisher", events: "topic.get_count" }].to_json)
-          end
-          
-          after do
-              Routemaster::Client::Connection.reset_connection
-          end
-          
-          it 'connects with new params' do
-              subject.monitor_topics
-              expect(@stub).to have_been_requested
-          end
+      before do
+          Routemaster::Client::Connection.reset_connection
+          @stub = stub_request(:get, 'https://@bus.example.com/topics').with({basic_auth: [instance_uuid, 'x']})
+          .to_return(status: 200, body: [{ name: "topic.name", publisher: "topic.publisher", events: "topic.get_count" }].to_json)
       end
+      
+      after { Routemaster::Client::Connection.reset_connection }
+      
+      it 'connects with new params' do
+          subject.monitor_topics
+          expect(@stub).to have_been_requested
+      end
+    end
   end
-
 end
