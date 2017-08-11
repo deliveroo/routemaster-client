@@ -196,6 +196,8 @@ be a valid HTTPS URL.
 The domain names of the bus to interact with, or a reference (`NAME`) to global
 configuration.
 
+Note that `DOMAIN` is _not_ a URL.
+
 ```
 -t|--token TOKEN
 ```

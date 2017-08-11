@@ -223,8 +223,6 @@ module Routemaster
 
       def _check_pulse!
         _conn.get('/pulse').tap do |response|
-          # require 'pry' ; binding.pry unless response.success?
-
           raise "Cannot connect to bus (status %s)" % response.status unless response.success?
         end
       end
