@@ -38,17 +38,19 @@ describe Routemaster::CLI::Sub, type: :cli do
     context 'with correct arguments' do
       let(:argv) { %w[sub list -b bus.dev -t s3cr3t] }
       before {
-        allow(client).to receive(:subscribers).and_return([
-          'subscriber' => 'service--f000-b44r-b44r',
-          'callback' => 'https://serviced.dev',
-          'events' => {
-            'queued' => 1234
-          },
+        allow(client).to receive(:monitor_subscriptions).and_return([
+          Routemaster::Client::Subscription.new(
+            'subscriber' => 'service--f000-b44r-b44r',
+            'callback' => 'https://serviced.dev',
+            'topics' => %w[cats dogs],
+            'events' => {
+              'queued' => 1234
+            })
         ])
       }
 
       it { 
-        expect(client).to receive(:subscribers).with(no_args)
+        expect(client).to receive(:monitor_subscriptions).with(no_args)
         perform
       }
       it {

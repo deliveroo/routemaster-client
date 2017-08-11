@@ -433,7 +433,7 @@ describe Routemaster::Client do
 
 
   context 'monitoring methods' do
-    let(:default_headers) { { 'Content-Type' => 'application/json' } }
+    let(:default_headers) {{}}
 
     shared_context 'successful connection to bus' do
       before do
