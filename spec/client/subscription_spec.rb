@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'routemaster/subscription'
+require 'routemaster/client/subscription'
 
-describe Routemaster::Subscription do
+describe Routemaster::Client::Subscription do
   describe '#initialize' do
     let(:options) {{ 
       'subscriber' => 'alice', 

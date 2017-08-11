@@ -4,8 +4,16 @@ require 'routemaster/client/configuration'
 require 'routemaster/client/version'
 require 'routemaster/client/errors'
 require 'routemaster/client/assertion_helpers'
-require 'routemaster/client/topic'
-require 'routemaster/client/subscription'
+require 'routemaster/topic'
+<<<<<<< HEAD
+require 'routemaster/subscription'
+require 'uri'
+require 'json'
+require 'faraday'
+require 'typhoeus'
+require 'typhoeus/adapters/faraday'
+=======
+>>>>>>> master
 require 'oj'
 
 module Routemaster

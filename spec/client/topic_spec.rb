@@ -1,6 +1,6 @@
-require 'routemaster/topic'
+require 'routemaster/client/topic'
 
-describe Routemaster::Topic do
+describe Routemaster::Client::Topic do
 
   let(:name)      { 'widgets' }
   let(:publisher) { 'demo' }
