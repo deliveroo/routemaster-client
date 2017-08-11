@@ -5,6 +5,7 @@ require 'routemaster/client/backends/sidekiq'
 require 'routemaster/topic'
 require 'webmock/rspec'
 require 'sidekiq/testing'
+require 'securerandom'
 
 describe Routemaster::Client do
 
@@ -69,10 +70,10 @@ describe Routemaster::Client do
     end
   end
 
-  shared_examples 'an event sender' do
+  shared_examples 'an event sender' do |spec_options|
     let(:callback) { 'https://app.example.com/widgets/123' }
     let(:topic)    { 'widgets' }
-    let(:perform)  { subject.send(event, topic, callback, **flags) }
+    let(:perform)  { subject.send(method, topic, callback, **flags) }
     let(:http_status) { nil }
 
     before do
@@ -95,6 +96,25 @@ describe Routemaster::Client do
           expect(req.headers['Content-Type']).to eq('application/json')
         end
         perform
+      end
+
+      it 'sends the url and type' do
+        @stub.with do |req|
+          data = JSON.parse(req.body)
+          expect(data['type']).to eq event
+          expect(data['url']).to eq callback
+        end
+        perform
+      end
+
+      if spec_options && spec_options[:set_timestamp]
+        it 'sets a timestamp' do
+          @stub.with do |req|
+            data = JSON.parse(req.body)
+            expect(data['timestamp']).to be_a_kind_of(Integer)
+          end
+          perform
+        end
       end
 
       it 'fails with a bad callback URL' do
@@ -121,7 +141,7 @@ describe Routemaster::Client do
       let(:http_status) { 500 }
 
       it 'raises an exception' do
-        expect { perform }.to raise_error(RuntimeError)
+        expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'event rejected (status: 500)')
       end
     end
 
@@ -136,7 +156,7 @@ describe Routemaster::Client do
 
     context 'with explicit timestamp' do
       let(:timestamp) { (Time.now.to_f * 1e3).to_i }
-      let(:perform)   { subject.send(event, topic, callback, t: timestamp) }
+      let(:perform)   { subject.send(method, topic, callback, t: timestamp) }
 
       before do
         @stub = stub_request(:post, 'https://@bus.example.com/topics/widgets').
@@ -171,7 +191,7 @@ describe Routemaster::Client do
 
     context 'with a data payload' do
       let(:timestamp) { (Time.now.to_f * 1e3).to_i }
-      let(:perform)   { subject.send(event, topic, callback, data: data) }
+      let(:perform)   { subject.send(method, topic, callback, data: data) }
       let(:data) {{ 'foo' => 'bar' }}
 
       before do
@@ -202,7 +222,8 @@ describe Routemaster::Client do
     context 'with default flags' do
       %w[created updated deleted noop].each do |m|
         describe "##{m}" do
-          let(:event) { m.to_sym }
+          let(:method) { m.to_sym }
+          let(:event) { m.sub(/d$/, '') }
           let(:flags) { {} }
           it_behaves_like 'an event sender'
         end
@@ -251,7 +272,8 @@ describe Routemaster::Client do
 
       %w[created updated deleted noop].each do |m|
         describe "##{m}" do
-          let(:event) { m }
+          let(:method) { m }
+          let(:event) { m.sub(/d$/, '') }
           it_behaves_like 'an event sender'
         end
       end
@@ -262,8 +284,9 @@ describe Routemaster::Client do
 
       %w[created updated deleted noop].each do |m|
         describe "##{m}" do
-          let(:event) { m }
-          it_behaves_like 'an event sender'
+          let(:method) { m }
+          let(:event) { m.sub(/d$/, '') }
+          it_behaves_like 'an event sender', set_timestamp: true
         end
       end
     end
@@ -271,7 +294,8 @@ describe Routemaster::Client do
     describe 'deprecated *_async methods' do
       %w[created updated deleted noop].each do |m|
         describe "##{m}_async" do
-          let(:event) { "#{m}_async" }
+          let(:method) { "#{m}_async" }
+          let(:event) { m.sub(/d$/, '') }
           let(:flags) { {} }
           it_behaves_like 'an event sender'
         end
@@ -324,7 +348,7 @@ describe Routemaster::Client do
 
     it 'fails on HTTP error' do
       @stub.to_return(status: 500)
-      expect { perform }.to raise_error(RuntimeError, 'subscribe rejected')
+      expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'subscribe rejected (status: 500)')
     end
 
     it 'accepts a uuid' do
@@ -356,7 +380,7 @@ describe Routemaster::Client do
 
     it 'fails on HTTP error' do
       @stub.to_return(status: 500)
-      expect { perform }.to raise_error(RuntimeError)
+      expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'unsubscribe rejected (status: 500)')
     end
   end
 
@@ -376,7 +400,7 @@ describe Routemaster::Client do
 
     it 'fails on HTTP error' do
       @stub.to_return(status: 500)
-      expect { perform }.to raise_error(RuntimeError)
+      expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'unsubscribe all rejected (status: 500)')
     end
   end
 
@@ -403,7 +427,7 @@ describe Routemaster::Client do
 
     it 'fails on HTTP error' do
       @stub.to_return(status: 500)
-      expect { perform }.to raise_error(RuntimeError)
+      expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'failed to delete topic (status: 500)')
     end
   end
 
@@ -427,35 +451,35 @@ describe Routemaster::Client do
       end
     end
 
-    describe '#monitor_topics' do
+  describe '#monitor_topics' do
       let(:url) { 'https://bus.example.com/topics' }
-      let(:perform) { subject.monitor_topics }
-      let(:expected_result) do
-        [
-          {
-            name: 'widgets',
-            publisher: 'demo',
-            events: 12589
-          }
-        ]
-      end
+    let(:perform) { subject.monitor_topics }
+    let(:expected_result) do
+      [
+        {
+          name: 'widgets',
+          publisher: 'demo',
+          events: 12589
+        }
+      ]
+    end
 
-      context 'the connection to the bus is successful' do
+    context 'the connection to the bus is successful' do
         include_context 'successful connection to bus'
 
-        it 'expects a collection of topics' do
-          expect(perform.map(&:attributes)).to eql(expected_result)
-        end
-      end
-
-      context 'the connection to the bus errors' do
-        include_context 'failing connection to bus'
-
-        it 'expects a collection of topics' do
-          expect { perform }.to raise_error(RuntimeError)
-        end
+      it 'expects a collection of topics' do
+        expect(perform.map(&:attributes)).to eql(expected_result)
       end
     end
+
+    context 'the connection to the bus errors' do
+        include_context 'failing connection to bus'
+
+      it 'expects a collection of topics' do
+        expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'failed to connect to /topics (status: 500)')
+      end
+    end
+  end
 
     describe '#monitor_subscriptions' do
       let(:url) { 'https://bus.example.com/subscriptions' }
@@ -474,7 +498,7 @@ describe Routemaster::Client do
 
         it 'expects a collection of subscriptions' do
           expect(perform.map(&:attributes)).to eql(expected_result)
-        end
+      end
       end
 
       context 'the connection to the bus errors' do
@@ -486,4 +510,35 @@ describe Routemaster::Client do
       end
     end
   end
+  
+  describe '#reset_connection' do
+      
+      context 'can reset class vars to change params' do
+          
+          let(:instance_uuid) { SecureRandom.uuid }
+          
+          let(:options) {{
+              url:        'https://@bus.example.com',
+              uuid:       instance_uuid,
+              verify_ssl: false,
+              lazy: true
+          }}
+          
+          before do
+              Routemaster::Client::Connection.reset_connection
+              @stub = stub_request(:get, 'https://@bus.example.com/topics').with({basic_auth: [instance_uuid, 'x']})
+              .to_return(status: 200, body: [{ name: "topic.name", publisher: "topic.publisher", events: "topic.get_count" }].to_json)
+          end
+          
+          after do
+              Routemaster::Client::Connection.reset_connection
+          end
+          
+          it 'connects with new params' do
+              subject.monitor_topics
+              expect(@stub).to have_been_requested
+          end
+      end
+  end
+
 end

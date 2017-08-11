@@ -7,7 +7,7 @@ module Routemaster
       @subscriber = options.fetch('subscriber')
       @callback   = options.fetch('callback')
       @topics     = options.fetch('topics')
-      @events     = options.fetch('events').symbolize_keys
+      @events     = _symbolize_keys options.fetch('events')
     end
 
     def attributes
@@ -17,6 +17,14 @@ module Routemaster
         topics:     @topics,
         events:     @events
       }
+    end
+
+    private
+
+    def _symbolize_keys(h)
+      {}.tap do |res|
+        h.each { |k,v| res[k.to_sym] = v }
+      end
     end
   end
 end

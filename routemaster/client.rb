@@ -6,11 +6,6 @@ require 'routemaster/client/errors'
 require 'routemaster/client/assertion_helpers'
 require 'routemaster/topic'
 require 'routemaster/subscription'
-require 'uri'
-require 'json'
-require 'faraday'
-require 'typhoeus'
-require 'typhoeus/adapters/faraday'
 require 'oj'
 
 module Routemaster
@@ -90,18 +85,14 @@ module Routemaster
         topics.each do |t|
           response = _conn.delete("/subscriber/topics/#{t}")
 
-          unless response.success?
-            raise 'unsubscribe rejected'
-          end
+          raise ConnectionError, "unsubscribe rejected (status: #{response.status})" unless response.success?
         end
       end
 
       def unsubscribe_all
         response = _conn.delete('/subscriber')
 
-        unless response.success?
-          raise 'unsubscribe all rejected'
-        end
+        raise ConnectionError, "unsubscribe all rejected (status: #{response.status})" unless response.success?
       end
 
       def delete_topic(topic)
@@ -109,9 +100,7 @@ module Routemaster
 
         response = _conn.delete("/topics/#{topic}")
 
-        unless response.success?
-          raise 'failed to delete topic'
-        end
+        raise ConnectionError, "failed to delete topic (status: #{response.status})" unless response.success?
       end
 
       def monitor_topics
@@ -119,9 +108,7 @@ module Routemaster
           r.headers['Content-Type'] = 'application/json'
         end
 
-        unless response.success?
-          raise 'failed to connect to /topics'
-        end
+        raise ConnectionError, "failed to connect to /topics (status: #{response.status})" unless response.success?
 
         Oj.load(response.body).map do |raw_topic|
           Topic.new raw_topic
@@ -204,6 +191,7 @@ module Routemaster
         _assert_valid_timestamp!(t) if t
         _assert_valid_data(data) if data
 
+        t ||= _now if async
         backend = async ? async_backend : _synchronous_backend
         backend.send_event(event, topic, callback, t: t, data: data)
       end
@@ -224,6 +212,11 @@ module Routemaster
         warn 'routemaster-client: Passing timestamps as positional parameters is deprecated. Use the t: key instead.'
         warn "(in #{caller(2,1).first})"
       end
+
+      def _now
+        (Time.now.to_f * 1e3).to_i
+      end
+
 
       private :async_backend, :lazy
     end
