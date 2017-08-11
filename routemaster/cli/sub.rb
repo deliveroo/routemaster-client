@@ -69,7 +69,7 @@ module Routemaster
         action do
           bad_argc! if argv.length > 0
 
-          puts YAML.dump(helper.client.subscribers)
+          puts YAML.dump(helper.client.monitor_subscriptions.map(&:attributes))
         end
       end
     end

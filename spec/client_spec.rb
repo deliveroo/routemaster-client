@@ -505,7 +505,7 @@ describe Routemaster::Client do
         include_context 'failing connection to bus'
 
         it 'expects a collection of topics' do
-          expect { perform }.to raise_error(RuntimeError)
+          expect { perform }.to raise_error(Routemaster::Client::ConnectionError)
         end
       end
     end

@@ -120,20 +120,11 @@ module Routemaster
           r.headers['Content-Type'] = 'application/json'
         end
 
-        unless response.success?
-          raise 'failed to connect to /subscriptions'
-        end
+        raise ConnectionError, "failed to list subscribers (status: #{response.status})" unless response.success?
 
         Oj.load(response.body).map do |raw_subscription|
           Subscription.new raw_subscription
         end
-      end
-
-      def subscribers
-        response = _conn.get('/subscribers')
-        raise ConnectionError, "failed to list subscribers (status: #{response.status})" unless response.success?
-
-        Oj.load(response.body)
       end
 
       def token_add(name:, token: nil)
