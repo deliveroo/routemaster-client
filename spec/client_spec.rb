@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'spec/support/configuration_helper'
 require 'routemaster/client'
 require 'routemaster/client/backends/sidekiq'
-require 'routemaster/topic'
+require 'routemaster/client/topic'
 require 'webmock/rspec'
 require 'sidekiq/testing'
 require 'securerandom'
@@ -432,76 +432,106 @@ describe Routemaster::Client do
   end
 
 
-  describe '#monitor_topics' do
+  context 'monitoring methods' do
+    let(:default_headers) { { 'Content-Type' => 'application/json' } }
 
-    let(:perform) { subject.monitor_topics }
-    let(:expected_result) do
-      [
-        {
-          name: 'widgets',
-          publisher: 'demo',
-          events: 12589
-        }
-      ]
-    end
-
-    context 'the connection to the bus is successful' do
+    shared_context 'successful connection to bus' do
       before do
-        @stub = stub_request(:get, 'https://bus.example.com/topics').
-          with(basic_auth: [options[:uuid], 'x']).
-          with { |r|
-          r.headers['Content-Type'] == 'application/json'
-        }.to_return {
-          { status: 200, body: expected_result.to_json }
-        }
-      end
-
-      it 'expects a collection of topics' do
-        expect(perform.map(&:attributes)).to eql(expected_result)
+        @stub = stub_request(:get, url)
+          .with(basic_auth: [options[:uuid], 'x'], headers: default_headers)
+          .to_return(status: 200, body: expected_result.to_json)
       end
     end
 
-    context 'the connection to the bus errors' do
+    shared_context 'failing connection to bus' do
       before do
-        @stub = stub_request(:get, 'https://bus.example.com/topics').
-          with(basic_auth: [options[:uuid], 'x']).
-          with { |r|
-          r.headers['Content-Type'] == 'application/json'
-        }.to_return(status: 500)
+        @stub = stub_request(:get, url)
+          .with(basic_auth: [options[:uuid], 'x'], headers: default_headers)
+          .to_return(status: 500)
+      end
+    end
+
+    describe '#monitor_topics' do
+      let(:url) { 'https://bus.example.com/topics' }
+      let(:perform) { subject.monitor_topics }
+      let(:expected_result) do
+        [
+          {
+            name: 'widgets',
+            publisher: 'demo',
+            events: 12589
+          }
+        ]
       end
 
-      it 'expects a collection of topics' do
-        expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'failed to connect to /topics (status: 500)')
+      context 'the connection to the bus is successful' do
+          include_context 'successful connection to bus'
+
+        it 'expects a collection of topics' do
+          expect(perform.map(&:attributes)).to eql(expected_result)
+        end
+      end
+
+      context 'the connection to the bus errors' do
+          include_context 'failing connection to bus'
+
+        it 'expects a collection of topics' do
+          expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'failed to connect to /topics (status: 500)')
+        end
+      end
+    end
+
+    describe '#monitor_subscriptions' do
+      let(:url) { 'https://bus.example.com/subscriptions' }
+      let(:perform) { subject.monitor_subscriptions }
+      let(:expected_result) do
+        [{
+          subscriber: 'bob',
+          callback:   'https://app.example.com/events',
+          topics:     ['widgets', 'kitten'],
+          events:     { sent: 1, queued: 100, oldest: 10_000 }
+        }]
+      end
+
+      context 'the connection to the bus is successful' do
+        include_context 'successful connection to bus'
+
+        it 'expects a collection of subscriptions' do
+          expect(perform.map(&:attributes)).to eql(expected_result)
+      end
+      end
+
+      context 'the connection to the bus errors' do
+        include_context 'failing connection to bus'
+
+        it 'expects a collection of topics' do
+          expect { perform }.to raise_error(RuntimeError)
+        end
       end
     end
   end
-
+  
   describe '#reset_connection' do
-
     context 'can reset class vars to change params' do
-
       let(:instance_uuid) { SecureRandom.uuid }
-
       let(:options) {{
-        url:        'https://@bus.example.com',
-        uuid:       instance_uuid,
-        verify_ssl: false,
-        lazy: true
+          url:        'https://@bus.example.com',
+          uuid:       instance_uuid,
+          verify_ssl: false,
+          lazy: true
       }}
-
+      
       before do
-        Routemaster::Client::Connection.reset_connection
-        @stub = stub_request(:get, 'https://@bus.example.com/topics').with({basic_auth: [instance_uuid, 'x']})
+          Routemaster::Client::Connection.reset_connection
+          @stub = stub_request(:get, 'https://@bus.example.com/topics').with({basic_auth: [instance_uuid, 'x']})
           .to_return(status: 200, body: [{ name: "topic.name", publisher: "topic.publisher", events: "topic.get_count" }].to_json)
       end
-
-      after do
-        Routemaster::Client::Connection.reset_connection
-      end
-
+      
+      after { Routemaster::Client::Connection.reset_connection }
+      
       it 'connects with new params' do
-        subject.monitor_topics
-        expect(@stub).to have_been_requested
+          subject.monitor_topics
+          expect(@stub).to have_been_requested
       end
     end
   end

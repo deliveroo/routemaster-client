@@ -1,5 +1,15 @@
 # HEAD
 
+Changes:
+
+- The `Routemaster::Topic` value object class is not namespaced as
+  `Routemaster::Client::Topic` (#17)
+
+Features:
+
+- Adds the `#monitor_subscriptions` API (#17)
+
+
 Bug fixes:
 
 - Always send a timestamp when sending asynchronously (#20)
