@@ -16,4 +16,7 @@ module Routemaster
 
     end
   end
+
+  # For backwards compatibility (TODO: remove in v4)
+  Topic = Client::Topic
 end
