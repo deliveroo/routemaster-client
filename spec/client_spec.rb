@@ -433,7 +433,7 @@ describe Routemaster::Client do
 
 
   context 'monitoring methods' do
-    let(:default_headers) { { 'Content-Type' => 'application/json' } }
+    let(:default_headers) {{}}
 
     shared_context 'successful connection to bus' do
       before do
@@ -505,7 +505,7 @@ describe Routemaster::Client do
         include_context 'failing connection to bus'
 
         it 'expects a collection of topics' do
-          expect { perform }.to raise_error(RuntimeError)
+          expect { perform }.to raise_error(Routemaster::Client::ConnectionError)
         end
       end
     end

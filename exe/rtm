@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'routemaster/cli/top_level'
+
+begin
+  Routemaster::CLI::Toplevel.new.run(ARGV)
+rescue Routemaster::CLI::Exit => e
+  exit e.message.to_i
+end
+

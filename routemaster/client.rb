@@ -104,10 +104,7 @@ module Routemaster
       end
 
       def monitor_topics
-        response = _conn.get('/topics') do |r|
-          r.headers['Content-Type'] = 'application/json'
-        end
-
+        response = _conn.get('/topics')
         raise ConnectionError, "failed to connect to /topics (status: #{response.status})" unless response.success?
 
         Oj.load(response.body).map do |raw_topic|
@@ -116,16 +113,38 @@ module Routemaster
       end
 
       def monitor_subscriptions
-        response = _conn.get('/subscriptions') do |r|
-          r.headers['Content-Type'] = 'application/json'
-        end
-
-        unless response.success?
-          raise 'failed to connect to /subscriptions'
-        end
+        response = _conn.get('/subscriptions')
+        raise ConnectionError, "failed to list subscribers (status: #{response.status})" unless response.success?
 
         Oj.load(response.body).map do |raw_subscription|
           Subscription.new raw_subscription
+        end
+      end
+
+      def token_add(name:, token: nil)
+        payload = { name: name }
+        payload[:token] = token if token
+        response = _conn.post('/api_tokens') do |r|
+          r.headers['Content-Type'] = 'application/json'
+          r.body = Oj.dump(payload, mode: :compat)
+        end
+
+        raise ConnectionError, "Failed to add token (status: #{response.status})" unless response.success?
+
+        Oj.load(response.body)['token']
+      end
+
+      def token_del(token:)
+        response = _conn.delete("/api_tokens/#{token}")
+        raise ConnectionError, "Failed to delete token (status: #{response.status})" unless response.success?
+        nil
+      end
+
+      def token_list
+        response = _conn.get("/api_tokens")
+        raise ConnectionError, "Failed to list tokens (status: #{response.status})" unless response.success?
+        Oj.load(response.body).each_with_object({}) do |entry, result|
+          result[entry['token']] = entry['name']
         end
       end
 
@@ -198,7 +217,7 @@ module Routemaster
 
       def _check_pulse!
         _conn.get('/pulse').tap do |response|
-          raise 'cannot connect to bus' unless response.success?
+          raise "Cannot connect to bus (status %s)" % response.status unless response.success?
         end
       end
 
