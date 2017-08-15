@@ -48,8 +48,8 @@ module Routemaster
         data =
         if File.exist?('.rtmrc')
           YAML.load_file('.rtmrc')
-        elsif File.exist?('~/.rtmrc')
-          YAML.load_file('~/.rtmrc')
+        elsif File.exist?(File.expand_path '~/.rtmrc')
+          YAML.load_file(File.expand_path '~/.rtmrc')
         else
           {}
         end
