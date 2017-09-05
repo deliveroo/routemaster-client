@@ -190,8 +190,7 @@ describe Routemaster::Client do
     end
 
     context 'with a data payload' do
-      let(:timestamp) { (Time.now.to_f * 1e3).to_i }
-      let(:perform)   { subject.send(method, topic, callback, data: data) }
+      let(:perform) { subject.send(method, topic, callback, data: data) }
       let(:data) {{ 'foo' => 'bar' }}
 
       before do
@@ -216,6 +215,26 @@ describe Routemaster::Client do
         end
       end
     end
+
+    context 'with a target payload' do
+      let(:perform) { subject.send(method, topic, callback, target: target) }
+      let(:target) { 'service-x' }
+
+      before do
+        @stub = stub_request(:post, 'https://@bus.example.com/topics/widgets').
+          with(
+            body: hash_including(target: target),
+            basic_auth: [options[:uuid], 'x'],
+          ).
+          to_return(status: 200)
+      end
+
+      it 'sends the event' do
+        perform
+        expect(@stub).to have_been_requested
+      end
+    end
+
   end
 
   context 'without a background worker specified' do
@@ -510,7 +529,7 @@ describe Routemaster::Client do
       end
     end
   end
-  
+
   describe '#reset_connection' do
     context 'can reset class vars to change params' do
       let(:instance_uuid) { SecureRandom.uuid }
@@ -520,15 +539,15 @@ describe Routemaster::Client do
           verify_ssl: false,
           lazy: true
       }}
-      
+
       before do
           Routemaster::Client::Connection.reset_connection
           @stub = stub_request(:get, 'https://@bus.example.com/topics').with({basic_auth: [instance_uuid, 'x']})
           .to_return(status: 200, body: [{ name: "topic.name", publisher: "topic.publisher", events: "topic.get_count" }].to_json)
       end
-      
+
       after { Routemaster::Client::Connection.reset_connection }
-      
+
       it 'connects with new params' do
           subject.monitor_topics
           expect(@stub).to have_been_requested
