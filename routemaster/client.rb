@@ -33,15 +33,15 @@ module Routemaster
         deleted: 'delete',
         noop: 'noop'
       }.each do |method_name, event_type|
-        define_method(method_name) do |topic, callback, timestamp = nil, t: nil, async: false, **rest|
+        define_method(method_name) do |topic, callback, timestamp = nil, t: nil, async: false, data: nil, target: nil|
           _warn_timestamp_deprecation(timestamp)
-          _send_event(event_type, topic, callback, t: t || timestamp, async: async, **rest)
+          _send_event(event_type, topic, callback, t: t || timestamp, async: async, data: data, target: target)
         end
 
-        define_method("#{method_name}_async") do |topic, callback, timestamp = nil, t: nil, **rest|
+        define_method("#{method_name}_async") do |topic, callback, timestamp = nil, t: nil, data: nil, target: nil|
           _warn_timestamp_deprecation(timestamp)
           _warn_async_deprecation
-          _send_event(event_type, topic, callback, t: t || timestamp, async: true, **rest)
+          _send_event(event_type, topic, callback, t: t || timestamp, async: true, data: data, target: target)
         end
       end
 
