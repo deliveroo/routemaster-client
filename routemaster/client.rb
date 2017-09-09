@@ -179,11 +179,18 @@ module Routemaster
         raise InvalidArgumentError, e
       end
 
+      def _assert_valid_target(value)
+        unless value =~ /\A[A-Za-z0-9_-]+\Z/
+          raise InvalidArgumentError, 'bad target subscription: must only include letters, dashes, underscores and numbers'
+        end
+      end
+
       def _send_event(event, topic, callback, t: nil, async: false, data: nil, target: nil)
         _assert_valid_url!(callback)
         _assert_valid_topic!(topic)
         _assert_valid_timestamp!(t) if t
         _assert_valid_data(data) if data
+        _assert_valid_target(target) if target
 
         t ||= _now if async
         backend = async ? async_backend : _synchronous_backend

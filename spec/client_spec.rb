@@ -233,6 +233,14 @@ describe Routemaster::Client do
         perform
         expect(@stub).to have_been_requested
       end
+
+      context "when target name is invalid" do
+        let(:target) { 'service%x' }
+
+        it "fails with a bad target name" do
+          expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
+        end
+      end
     end
 
   end
