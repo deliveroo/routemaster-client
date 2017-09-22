@@ -13,6 +13,16 @@ module Routemaster
           raise error_class, "url '#{url}' is invalid, must be an https url"
         end
       end
+
+      def _assert_response_throwing_error!(response, error_class, message)
+        return if response.success?
+
+        reason = response.body
+        info = ["status: #{response.status}"]
+        info << "reason: #{reason}" if reason != '' && !reason.nil?
+
+        raise error_class, "#{message} (#{info.join(', ')})"
+      end
     end
   end
 end

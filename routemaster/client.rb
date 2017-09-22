@@ -84,28 +84,25 @@ module Routemaster
 
         topics.each do |t|
           response = _conn.delete("/subscriber/topics/#{t}")
-
-          raise ConnectionError, "unsubscribe rejected (status: #{response.status})" unless response.success?
+          _assert_response_throwing_error!(response, ConnectionError, "unsubscribe rejected")
         end
       end
 
       def unsubscribe_all
         response = _conn.delete('/subscriber')
-
-        raise ConnectionError, "unsubscribe all rejected (status: #{response.status})" unless response.success?
+        _assert_response_throwing_error!(response, ConnectionError, "unsubscribe all rejected")
       end
 
       def delete_topic(topic)
         _assert_valid_topic!(topic)
 
         response = _conn.delete("/topics/#{topic}")
-
-        raise ConnectionError, "failed to delete topic (status: #{response.status})" unless response.success?
+        _assert_response_throwing_error!(response, ConnectionError, "failed to delete topic")
       end
 
       def monitor_topics
         response = _conn.get('/topics')
-        raise ConnectionError, "failed to connect to /topics (status: #{response.status})" unless response.success?
+        _assert_response_throwing_error!(response, ConnectionError, "failed to connect to /topics")
 
         Oj.load(response.body).map do |raw_topic|
           Topic.new raw_topic
@@ -114,7 +111,7 @@ module Routemaster
 
       def monitor_subscriptions
         response = _conn.get('/subscriptions')
-        raise ConnectionError, "failed to list subscribers (status: #{response.status})" unless response.success?
+        _assert_response_throwing_error!(response, ConnectionError, "failed to list subscribers")
 
         Oj.load(response.body).map do |raw_subscription|
           Subscription.new raw_subscription
@@ -129,14 +126,13 @@ module Routemaster
           r.body = Oj.dump(payload, mode: :compat)
         end
 
-        raise ConnectionError, "Failed to add token (status: #{response.status})" unless response.success?
-
+        _assert_response_throwing_error!(response, ConnectionError, "Failed to add token")
         Oj.load(response.body)['token']
       end
 
       def token_del(token:)
         response = _conn.delete("/api_tokens/#{token}")
-        raise ConnectionError, "Failed to delete token (status: #{response.status})" unless response.success?
+        _assert_response_throwing_error!(response, ConnectionError, "Failed to delete token")
         nil
       end
 

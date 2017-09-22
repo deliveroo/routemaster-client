@@ -2,12 +2,14 @@ require 'faraday'
 require 'typhoeus'
 require 'typhoeus/adapters/faraday'
 require 'routemaster/client/configuration'
+require 'routemaster/client/assertion_helpers'
 
 module Routemaster
   module Client
     module Connection
       class << self
         extend Forwardable
+        include AssertionHelpers
 
         def post(path, &block)
           http(:post, path, &block)
@@ -34,9 +36,7 @@ module Routemaster
             r.body = Oj.dump(payload, mode: :strict)
           end
 
-          raise ConnectionError, "event rejected (status: #{response.status})" unless response.success?
-
-          # Any issues would have caused an exception to be thrown
+          _assert_response_throwing_error!(response, ConnectionError, "event rejected")
           true
         end
 
@@ -46,7 +46,7 @@ module Routemaster
             r.body = Oj.dump(_stringify_keys options)
           end
 
-          raise ConnectionError, "subscribe rejected (status: #{response.status})" unless response.success?
+          _assert_response_throwing_error!(response, ConnectionError, "subscribe rejected")
         end
 
         def reset_connection

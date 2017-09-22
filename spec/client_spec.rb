@@ -8,7 +8,6 @@ require 'sidekiq/testing'
 require 'securerandom'
 
 describe Routemaster::Client do
-
   reset_config_between_tests!
 
   let(:options) {{
@@ -75,12 +74,13 @@ describe Routemaster::Client do
     let(:topic)    { 'widgets' }
     let(:perform)  { subject.send(method, topic, callback, **flags) }
     let(:http_status) { nil }
+    let(:body) { '' }
 
     before do
       @stub = stub_request(:post, 'https://bus.example.com/topics/widgets').
         with(basic_auth: [options[:uuid], 'x'])
 
-      @stub.to_return(status: http_status) if http_status
+      @stub.to_return(status: http_status, body: body) if http_status
     end
 
     context 'when the bus responds 200' do
@@ -139,9 +139,10 @@ describe Routemaster::Client do
 
     context 'when the bus responds 500' do
       let(:http_status) { 500 }
+      let(:body) { 'some reason' }
 
       it 'raises an exception' do
-        expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'event rejected (status: 500)')
+        expect { perform }.to raise_error(Routemaster::Client::ConnectionError, "event rejected (status: 500, reason: some reason)")
       end
     end
 
@@ -347,8 +348,8 @@ describe Routemaster::Client do
     end
 
     it 'fails on HTTP error' do
-      @stub.to_return(status: 500)
-      expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'subscribe rejected (status: 500)')
+      @stub.to_return(status: 500, body: 'subscription invalid')
+      expect { perform }.to raise_error(Routemaster::Client::ConnectionError, 'subscribe rejected (status: 500, reason: subscription invalid)')
     end
 
     it 'accepts a uuid' do
@@ -510,7 +511,7 @@ describe Routemaster::Client do
       end
     end
   end
-  
+
   describe '#reset_connection' do
     context 'can reset class vars to change params' do
       let(:instance_uuid) { SecureRandom.uuid }
@@ -520,15 +521,15 @@ describe Routemaster::Client do
           verify_ssl: false,
           lazy: true
       }}
-      
+
       before do
           Routemaster::Client::Connection.reset_connection
           @stub = stub_request(:get, 'https://@bus.example.com/topics').with({basic_auth: [instance_uuid, 'x']})
           .to_return(status: 200, body: [{ name: "topic.name", publisher: "topic.publisher", events: "topic.get_count" }].to_json)
       end
-      
+
       after { Routemaster::Client::Connection.reset_connection }
-      
+
       it 'connects with new params' do
           subject.monitor_topics
           expect(@stub).to have_been_requested
