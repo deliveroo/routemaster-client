@@ -9,8 +9,8 @@ describe Routemaster::CLI::Sub, type: :cli do
     context 'with correct arguments' do
       let(:argv) { %w[sub add https://my-service.dev cats dogs -b bus.dev -t s3cr3t] }
 
-      it { 
-        expect(client).to receive(:subscribe).with(topics: %w[cats dogs], callback: 'https://my-service.dev')
+      it {
+        expect(client).to receive(:subscribe).with(topics: %w[cats dogs], callback: 'https://my-service.dev', uuid: 's3cr3t')
         perform
       }
     end
@@ -19,7 +19,7 @@ describe Routemaster::CLI::Sub, type: :cli do
   describe 'del' do
     context 'with a list of topics' do
       let(:argv) { %w[sub del cats dogs -b bus.dev -t s3cr3t] }
-      it { 
+      it {
         expect(client).to receive(:unsubscribe).with('cats', 'dogs')
         perform
       }
@@ -27,7 +27,7 @@ describe Routemaster::CLI::Sub, type: :cli do
 
     context 'without arguments' do
       let(:argv) { %w[sub del -b bus.dev -t s3cr3t] }
-      it { 
+      it {
         expect(client).to receive(:unsubscribe_all).with(no_args)
         perform
       }
@@ -49,7 +49,7 @@ describe Routemaster::CLI::Sub, type: :cli do
         ])
       }
 
-      it { 
+      it {
         expect(client).to receive(:monitor_subscriptions).with(no_args)
         perform
       }
