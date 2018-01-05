@@ -1,3 +1,9 @@
+## 3.1.2 (2018-01-05)
+
+Bug fixes:
+
+- Send UUID from given TOKEN when adding/updating subscription(s) (#28)
+
 ## 3.1.1 (2017-08-15)
 
 Features:
