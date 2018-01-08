@@ -7,10 +7,18 @@ describe Routemaster::CLI::Sub, type: :cli do
 
   describe 'add' do
     context 'with correct arguments' do
-      let(:argv) { %w[sub add https://my-service.dev cats dogs -b bus.dev -t s3cr3t] }
+      let(:argv) do
+        %w[sub add https://my-service.dev cats dogs -b bus.dev -t s3cr3t --batch-size 30 --latency 200]
+      end
 
       it {
-        expect(client).to receive(:subscribe).with(topics: %w[cats dogs], callback: 'https://my-service.dev', uuid: 's3cr3t')
+        expect(client).to receive(:subscribe).with(
+          topics: %w[cats dogs],
+          callback: 'https://my-service.dev',
+          uuid: 's3cr3t',
+          max: 30,
+          timeout: 200
+        )
         perform
       }
     end
