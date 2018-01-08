@@ -19,7 +19,7 @@ module Routemaster
 
         options do |p|
           p.on('--latency MS', %{
-            The target delivery latency for this subscriber (ie. how long to buffer events for). 
+            The target delivery latency for this subscriber (ie. how long to buffer events for).
           }) do |x|
             config.latency = Integer(x)
           end
@@ -38,6 +38,7 @@ module Routemaster
           params = {}
           params[:timeout] = config.latency    if config.latency
           params[:max]     = config.batch_size if config.batch_size
+          params[:uuid]    = config.token
           helper.client.subscribe(callback: url, topics: topics, **params)
         end
       end
