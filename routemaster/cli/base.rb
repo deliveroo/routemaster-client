@@ -33,6 +33,16 @@ module Routemaster
         def action(&block)
           block_given? ? (@action = block) : @action || lambda { |*| }
         end
+
+        def config
+          @config ||= Hashie::Mash.new(_default_options).merge(defaults)
+        end
+
+        private
+
+        def _default_options
+          { verbose: false }
+        end
       end
 
       def initialize(stderr:, stdout:)
@@ -61,7 +71,7 @@ module Routemaster
       end
 
       def config
-        @config ||= Hashie::Mash.new(_default_options).merge(self.class.defaults)
+        self.class.config
       end
 
       def helper
@@ -88,10 +98,6 @@ module Routemaster
       end
 
       private
-
-      def _default_options
-        { verbose: false }
-      end
 
       def _parser
         @parser ||= OptionParser.new do |p|
