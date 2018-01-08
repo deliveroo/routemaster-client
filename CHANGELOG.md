@@ -1,3 +1,9 @@
+## 3.1.3 (2018-01-08)
+
+Bug fixes:
+
+- Fix crash when specifying latency and batch size for subscriptions (#29)
+
 ## 3.1.2 (2018-01-05)
 
 Bug fixes:
