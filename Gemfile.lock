@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    routemaster-client (3.1.2)
+    routemaster-client (3.2.0)
       faraday (>= 0.9.0)
       hashie
       oj (>= 2.17)
@@ -57,7 +57,7 @@ GEM
     notiffany (0.1.1)
       nenv (~> 0.1)
       shellany (~> 0.0)
-    oj (3.3.5)
+    oj (3.3.10)
     pry (0.10.4)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)

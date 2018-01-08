@@ -1,3 +1,13 @@
+## 3.2.0 (2018-01-08)
+
+Changes:
+
+-  Unpin oj (#25)
+
+Bug fixes:
+
+- Fixes out of scope config (#30)
+
 ## 3.1.2 (2018-01-05)
 
 Bug fixes:
