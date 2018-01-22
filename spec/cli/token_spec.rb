@@ -46,5 +46,16 @@ describe Routemaster::CLI::Token, type: :cli do
         expect { perform }.to change { stdout.string }.to "service--t0ken\tservice\n"
       }
     end
+
+    context 'when the server token list is empty' do
+      let(:argv) { %w[token list -b bus.dev -t s3cr3t] }
+      before {
+        allow(client).to receive(:token_list).and_return({})
+      }
+
+      it {
+        expect { perform }.to change { stdout.string }.to "No tokens have been added.\n"
+      }
+    end
   end
 end

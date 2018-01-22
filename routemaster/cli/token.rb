@@ -42,8 +42,14 @@ module Routemaster
         action do
           bad_argc! unless argv.length == 0
 
-          helper.client.token_list.each do |t,n|
-            puts "#{t}\t#{n}"
+          token_list = helper.client.token_list
+
+          if token_list.empty?
+            puts 'No tokens have been added.'
+          else
+            helper.client.token_list.each do |t,n|
+              puts "#{t}\t#{n}"
+            end
           end
         end
       end
