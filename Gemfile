@@ -14,6 +14,6 @@ gem 'webmock'
 gem 'pry-byebug'
 gem 'rack-test'
 gem 'simplecov'
-gem 'codeclimate-test-reporter', require: nil
+gem 'codeclimate-test-reporter', '~> 1.0.8', require: nil
 gem 'sidekiq'
 
