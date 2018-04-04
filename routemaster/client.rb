@@ -26,48 +26,23 @@ module Routemaster
         end
       end
 
-      def created(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _send_event('create', topic, callback, t: t || timestamp, async: async, data: data)
-      end
+      # define event factory methods
+      {
+        created: 'create',
+        updated: 'update',
+        deleted: 'delete',
+        noop: 'noop'
+      }.each do |method_name, event_type|
+        define_method(method_name) do |topic, callback, timestamp = nil, t: nil, async: false, data: nil, target: nil|
+          _warn_timestamp_deprecation(timestamp)
+          _send_event(event_type, topic, callback, t: t || timestamp, async: async, data: data, target: target)
+        end
 
-      def created_async(topic, callback, timestamp = nil, t: nil, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _warn_async_deprecation
-        _send_event('create', topic, callback, t: t || timestamp, async: true, data: data)
-      end
-
-      def updated(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _send_event('update', topic, callback, t: t || timestamp, async: async, data: data)
-      end
-
-      def updated_async(topic, callback, timestamp = nil, t: nil, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _warn_async_deprecation
-        _send_event('update', topic, callback, t: t || timestamp, async: true, data: data)
-      end
-
-      def deleted(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _send_event('delete', topic, callback, t: t || timestamp, async: async, data: data)
-      end
-
-      def deleted_async(topic, callback, timestamp = nil, t: nil, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _warn_async_deprecation
-        _send_event('delete', topic, callback, t: t || timestamp, async: true, data: data)
-      end
-
-      def noop(topic, callback, timestamp = nil, t: nil, async: false, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _send_event('noop', topic, callback, t: t || timestamp, async: async, data: data)
-      end
-
-      def noop_async(topic, callback, timestamp = nil, t: nil, data: nil)
-        _warn_timestamp_deprecation(timestamp)
-        _warn_async_deprecation
-        _send_event('noop', topic, callback, t: t || timestamp, async: true, data: data)
+        define_method("#{method_name}_async") do |topic, callback, timestamp = nil, t: nil, data: nil, target: nil|
+          _warn_timestamp_deprecation(timestamp)
+          _warn_async_deprecation
+          _send_event(event_type, topic, callback, t: t || timestamp, async: true, data: data, target: target)
+        end
       end
 
       def subscribe(topics:, callback:, **options)
@@ -204,15 +179,22 @@ module Routemaster
         raise InvalidArgumentError, e
       end
 
-      def _send_event(event, topic, callback, t: nil, async: false, data: nil)
+      def _assert_valid_target(value)
+        unless value =~ /\A[A-Za-z0-9_-]+\Z/
+          raise InvalidArgumentError, 'bad target subscription: must only include letters, dashes, underscores and numbers'
+        end
+      end
+
+      def _send_event(event, topic, callback, t: nil, async: false, data: nil, target: nil)
         _assert_valid_url!(callback)
         _assert_valid_topic!(topic)
         _assert_valid_timestamp!(t) if t
         _assert_valid_data(data) if data
+        _assert_valid_target(target) if target
 
         t ||= _now if async
         backend = async ? async_backend : _synchronous_backend
-        backend.send_event(event, topic, callback, t: t, data: data)
+        backend.send_event(event, topic, callback, t: t, data: data, target: target)
       end
 
       def _check_pulse!

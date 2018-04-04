@@ -25,9 +25,10 @@ module Routemaster
           _conn.send(method, path, &block)
         end
 
-        def send_event(event, topic, callback, t: nil, data: nil)
+        def send_event(event, topic, callback, t: nil, data: nil, target: nil)
           payload = { 'type' => event, 'url' => callback, 'timestamp' => t }
           payload['data'] = data unless data.nil?
+          payload['target'] = target unless target.nil?
 
           response = post("/topics/#{topic}") do |r|
             r.headers['Content-Type'] = 'application/json'
