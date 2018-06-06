@@ -100,7 +100,7 @@ module Routemaster
 
           if self.class.options
             p.separator 'Options:'
-            self.class.options.call(p)
+            instance_exec(p, &self.class.options)
           end
 
           p.separator 'Common options:'

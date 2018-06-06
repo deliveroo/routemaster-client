@@ -210,7 +210,7 @@ describe Routemaster::Client do
       end
 
       context 'with non-serializable data' do
-        let(:data) { [:foo, 'bar'] }
+        let(:data) { [Object.new, 'bar'] }
 
         it 'fails' do
           expect { perform }.to raise_error(Routemaster::Client::InvalidArgumentError)
