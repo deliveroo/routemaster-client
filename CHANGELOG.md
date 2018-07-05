@@ -1,3 +1,11 @@
+## HEAD
+
+Bug fixes:
+
+- Subscription now includes max_events and timeout details so they
+  get printed
+- `$LOAD_PATH` is fixed so `./exe/rtm` can now be run directly
+
 ## 3.2.0 (2018-01-08)
 
 Changes:

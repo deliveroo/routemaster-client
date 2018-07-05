@@ -7,6 +7,8 @@ module Routemaster
       def initialize(options)
         @subscriber = options.fetch('subscriber')
         @callback   = options.fetch('callback')
+        @max_events = options['max_events']
+        @timeout    = options['timeout']
         @topics     = options.fetch('topics')
         @events     = _symbolize_keys options.fetch('events')
       end
@@ -15,8 +17,10 @@ module Routemaster
         {
           subscriber: @subscriber,
           callback:   @callback,
+          max_events: @max_events,
+          timeout:    @timeout,
           topics:     @topics,
-          events:     @events
+          events:     @events,
         }
       end
 

@@ -489,7 +489,9 @@ describe Routemaster::Client do
           subscriber: 'bob',
           callback:   'https://app.example.com/events',
           topics:     ['widgets', 'kitten'],
-          events:     { sent: 1, queued: 100, oldest: 10_000 }
+          events:     { sent: 1, queued: 100, oldest: 10_000 },
+          max_events: nil,
+          timeout:    nil,
         }]
       end
 
@@ -510,7 +512,7 @@ describe Routemaster::Client do
       end
     end
   end
-  
+
   describe '#reset_connection' do
     context 'can reset class vars to change params' do
       let(:instance_uuid) { SecureRandom.uuid }
@@ -520,15 +522,15 @@ describe Routemaster::Client do
           verify_ssl: false,
           lazy: true
       }}
-      
+
       before do
           Routemaster::Client::Connection.reset_connection
           @stub = stub_request(:get, 'https://@bus.example.com/topics').with({basic_auth: [instance_uuid, 'x']})
           .to_return(status: 200, body: [{ name: "topic.name", publisher: "topic.publisher", events: "topic.get_count" }].to_json)
       end
-      
+
       after { Routemaster::Client::Connection.reset_connection }
-      
+
       it 'connects with new params' do
           subject.monitor_topics
           expect(@stub).to have_been_requested
