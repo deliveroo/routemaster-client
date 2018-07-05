@@ -3,15 +3,17 @@ require 'routemaster/client/subscription'
 
 describe Routemaster::Client::Subscription do
   describe '#initialize' do
-    let(:options) {{ 
-      'subscriber' => 'alice', 
+    let(:options) {{
+      'subscriber' => 'alice',
       'callback'   => 'https://example.com/events',
+      'max_events' => 100,
+      'timeout'    => 500,
       'topics'     => %w[widgets],
       'events'     => {},
     }}
 
     subject { described_class.new(options) }
-    
+
     it 'passes' do
       expect { subject }.not_to raise_error
     end
