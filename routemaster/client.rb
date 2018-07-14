@@ -142,7 +142,10 @@ module Routemaster
 
       def token_list
         response = _conn.get("/api_tokens")
+
         raise ConnectionError, "Failed to list tokens (status: #{response.status})" unless response.success?
+        return {} if response.body.empty?
+
         Oj.load(response.body).each_with_object({}) do |entry, result|
           result[entry['token']] = entry['name']
         end
