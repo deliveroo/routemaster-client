@@ -1,5 +1,11 @@
 # HEAD
 
+## 3.2.2 (2018-10-08)
+
+Changes:
+
+- Show UUID of subscribers in output of `rtm sub list` (#36)
+
 ## 3.2.1 (2018-07-05)
 
 Bug fixes:
