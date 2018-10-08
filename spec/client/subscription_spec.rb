@@ -5,6 +5,7 @@ describe Routemaster::Client::Subscription do
   describe '#initialize' do
     let(:options) {{
       'subscriber' => 'alice',
+      'uuid'       => 'sub-one--12345',
       'callback'   => 'https://example.com/events',
       'max_events' => 100,
       'timeout'    => 500,
