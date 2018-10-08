@@ -6,6 +6,7 @@ module Routemaster
 
       def initialize(options)
         @subscriber = options.fetch('subscriber')
+        @uuid       = options.fetch('uuid')
         @callback   = options.fetch('callback')
         @max_events = options['max_events']
         @timeout    = options['timeout']
@@ -16,6 +17,7 @@ module Routemaster
       def attributes
         {
           subscriber: @subscriber,
+          uuid:       @uuid,
           callback:   @callback,
           max_events: @max_events,
           timeout:    @timeout,
