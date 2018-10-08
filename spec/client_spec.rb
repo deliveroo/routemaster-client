@@ -487,6 +487,7 @@ describe Routemaster::Client do
       let(:expected_result) do
         [{
           subscriber: 'bob',
+          uuid:       'service--af000-b44r-b44r',
           callback:   'https://app.example.com/events',
           topics:     ['widgets', 'kitten'],
           events:     { sent: 1, queued: 100, oldest: 10_000 },
@@ -500,7 +501,7 @@ describe Routemaster::Client do
 
         it 'expects a collection of subscriptions' do
           expect(perform.map(&:attributes)).to eql(expected_result)
-      end
+        end
       end
 
       context 'the connection to the bus errors' do

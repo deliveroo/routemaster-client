@@ -49,6 +49,7 @@ describe Routemaster::CLI::Sub, type: :cli do
         allow(client).to receive(:monitor_subscriptions).and_return([
           Routemaster::Client::Subscription.new(
             'subscriber' => 'service--f000-b44r-b44r',
+            'uuid' => 'service--af000-b44r-b44r',
             'callback' => 'https://serviced.dev',
             'topics' => %w[cats dogs],
             'events' => {
