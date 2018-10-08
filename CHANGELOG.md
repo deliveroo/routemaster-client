@@ -1,5 +1,11 @@
 # HEAD
 
+## 3.2.3 (2018-10-08)
+
+Bug fixes:
+
+- Fix Gemfile.lock
+
 ## 3.2.2 (2018-10-08)
 
 Changes:
